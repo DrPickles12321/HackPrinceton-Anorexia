@@ -1,6 +1,7 @@
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase'
+import { useAuth } from '../contexts/AuthContext'
 import { useRealtimeStatus } from '../contexts/RealtimeContext'
 import { useFirebaseData } from '../contexts/FirebaseDataContext'
 import LiveIndicator from './LiveIndicator'
@@ -13,6 +14,7 @@ const PARENT_TABS = [
 
 export default function Navbar() {
   const { status } = useRealtimeStatus()
+  const { role } = useAuth()
   const { familyCode } = useFirebaseData()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -99,44 +101,6 @@ export default function Navbar() {
               </div>
             )}
             <LiveIndicator status={status} />
-
-            {/* Role toggle */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 2,
-              background: 'var(--surface-warm)', padding: '3px',
-              borderRadius: 13, border: '1.5px solid var(--border)',
-            }}>
-              <button
-                onClick={() => navigate('/parent/daily')}
-                onMouseEnter={e => { if (!isParent) { e.currentTarget.style.background = 'rgba(184,85,53,0.10)'; e.currentTarget.style.color = 'var(--text-dark)' } }}
-                onMouseLeave={e => { if (!isParent) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-light)' } }}
-                style={{
-                  padding: '5px 13px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
-                  color: isParent ? 'white' : 'var(--text-light)',
-                  background: isParent
-                    ? 'linear-gradient(135deg, var(--coral) 0%, var(--pink) 100%)'
-                    : 'transparent',
-                  boxShadow: isParent ? '0 2px 6px rgba(184,85,53,0.25)' : 'none',
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-              >Parent</button>
-              <button
-                onClick={() => navigate('/clinician')}
-                onMouseEnter={e => { if (!isClinician) { e.currentTarget.style.background = 'rgba(72,122,103,0.10)'; e.currentTarget.style.color = 'var(--text-dark)' } }}
-                onMouseLeave={e => { if (!isClinician) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-light)' } }}
-                style={{
-                  padding: '5px 13px', borderRadius: 10, border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 500, transition: 'all 0.15s',
-                  color: isClinician ? 'white' : 'var(--text-light)',
-                  background: isClinician
-                    ? 'linear-gradient(135deg, var(--mint) 0%, #306050 100%)'
-                    : 'transparent',
-                  boxShadow: isClinician ? '0 2px 6px rgba(72,122,103,0.25)' : 'none',
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-              >Clinician</button>
-            </div>
 
             <button
               onClick={() => { localStorage.removeItem('demoRole'); signOut(auth) }}

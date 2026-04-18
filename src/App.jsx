@@ -18,10 +18,16 @@ function AppLayout() {
   const { pathname } = useLocation()
   const navigate = useNavigate()
 
-  // Once Firebase confirms a logged-in user with a role, skip the demo login page
+  // Redirect to the correct view based on role; block access to the wrong view
   useEffect(() => {
-    if (user && role && pathname === '/') {
-      navigate(role === 'parent' ? '/parent/daily' : '/clinician', { replace: true })
+    if (!user || !role) return
+    const onParent    = pathname.startsWith('/parent')
+    const onClinician = pathname.startsWith('/clinician')
+    const onRoot      = pathname === '/'
+    if (role === 'parent' && (onRoot || onClinician)) {
+      navigate('/parent/daily', { replace: true })
+    } else if (role === 'clinician' && (onRoot || onParent)) {
+      navigate('/clinician', { replace: true })
     }
   }, [user, role, pathname, navigate])
 
