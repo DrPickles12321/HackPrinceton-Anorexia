@@ -78,7 +78,7 @@ export function FirebaseDataProvider({ children }) {
   const [patients, setPatients]                       = useState([])   // [{uid, email}]
   const [viewingPatientUid, setViewingPatientUid]     = useState(null)
   const [patientFbMealData, setPatientFbMealData]     = useState({})
-  const [patientNutritionalTargets, setPatientNutritionalTargets] = useState(DEFAULT_TARGETS)
+  const [patientNutritionalTargets, setPatientNutritionalTargets] = useState(null)
   const [ownPrescribedSupplements, setOwnPrescribedSupplements]       = useState([])
   const [patientPrescribedSupplements, setPatientPrescribedSupplements] = useState([])
 
@@ -179,7 +179,7 @@ export function FirebaseDataProvider({ children }) {
   useEffect(() => {
     if (!viewingPatientUid) {
       setPatientFbMealData({})
-      setPatientNutritionalTargets(DEFAULT_TARGETS)
+      setPatientNutritionalTargets(null)
       setPatientPrescribedSupplements([])
       return
     }
@@ -189,7 +189,7 @@ export function FirebaseDataProvider({ children }) {
     }))
     unsubs.push(onValue(ref(db, `users/${viewingPatientUid}/nutritionalTargets`), snap => {
       const val = snap.val()
-      setPatientNutritionalTargets(val && !val.breakfast ? val : DEFAULT_TARGETS)
+      setPatientNutritionalTargets(val && !val.breakfast ? val : null)
     }))
     unsubs.push(onValue(ref(db, `users/${viewingPatientUid}/prescribedSupplements`), snap => {
       const val = snap.val()

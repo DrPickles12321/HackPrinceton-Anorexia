@@ -40,11 +40,11 @@ const NUTRIENTS = [
 export default function WeeklyGoals({ mealSlots, foodItems, mode = 'parent', allMealItems }) {
   const { targets } = useNutritionalTargets()
 
-  const weeklyTargets = useMemo(() => ({
+  const weeklyTargets = useMemo(() => targets ? ({
     protein:       (targets.protein       || 0) * 7,
     carbs:         (targets.carbs         || 0) * 7,
     fruitsVeggies: (targets.fruitsVeggies || 0) * 7,
-  }), [targets])
+  }) : null, [targets])
 
   const actuals = useMemo(() => {
     const sums = { protein: 0, carbs: 0, fruitsVeggies: 0 }
@@ -104,7 +104,11 @@ export default function WeeklyGoals({ mealSlots, foodItems, mode = 'parent', all
         </p>
       </header>
 
-      {totalFilled === 0 ? (
+      {!weeklyTargets ? (
+        <p style={{ fontSize: 13, color: 'var(--text-light)', textAlign: 'center', padding: '24px 0' }}>
+          No targets set for this patient yet.
+        </p>
+      ) : totalFilled === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--text-light)', textAlign: 'center', padding: '24px 0' }}>
           No meals planned yet — drag foods onto the grid to start.
         </p>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNutritionalTargets } from '../contexts/NutritionalTargetsContext'
 
 const NUTRIENTS = [
@@ -9,9 +9,13 @@ const NUTRIENTS = [
 
 export default function NutritionalTargets() {
   const { targets, saveTargets } = useNutritionalTargets()
-  const [draft, setDraft] = useState(() => ({ ...targets }))
+  const [draft, setDraft] = useState(() => ({ ...(targets || { protein: 0, carbs: 0, fruitsVeggies: 0 }) }))
   const [open, setOpen] = useState(false)
   const [saved, setSaved] = useState(false)
+
+  useEffect(() => {
+    setDraft({ ...(targets || { protein: 0, carbs: 0, fruitsVeggies: 0 }) })
+  }, [targets])
 
   function handleChange(key, raw) {
     const val = Math.max(0, parseInt(raw, 10) || 0)

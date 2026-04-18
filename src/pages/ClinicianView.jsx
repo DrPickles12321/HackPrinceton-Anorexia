@@ -366,6 +366,22 @@ export default function ClinicianView() {
 
       {!loading && !error && (
         <>
+          {!viewingPatientUid ? (
+            <div style={{
+              textAlign: 'center', padding: '64px 24px',
+              color: '#9ca3af', fontSize: 14,
+              fontFamily: "'Outfit', sans-serif",
+            }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>🩺</div>
+              <p style={{ fontWeight: 600, color: '#6b7280', fontSize: 16, marginBottom: 8 }}>
+                No patient selected
+              </p>
+              <p style={{ fontSize: 13 }}>
+                Select a patient from the dropdown above to view their data.
+              </p>
+            </div>
+          ) : (
+          <>
           <WeeklyGrid
             mealSlots={mealSlots}
             foodItems={foodItems}
@@ -431,6 +447,8 @@ export default function ClinicianView() {
             onSave={handleSaveNote}
             notesReadByParent={clinicianNotesRead}
           />
+          </>
+          )}
         </>
       )}
 

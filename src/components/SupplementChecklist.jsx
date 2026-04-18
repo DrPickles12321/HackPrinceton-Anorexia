@@ -11,12 +11,7 @@ export default function SupplementChecklist({ mealSlots, foodItems, selectedDay,
     ? prescribedSupplements.map(name => ({ nutrient: name }))
     : recommendations.length > 0
       ? recommendations
-      : [
-          { nutrient: 'Calcium + D3' },
-          { nutrient: 'Iron' },
-          { nutrient: 'Zinc' },
-          { nutrient: 'Multivitamin' },
-        ]
+      : []
 
   return (
     <div style={{ position: 'relative', paddingTop: 14 }}>
@@ -62,7 +57,11 @@ export default function SupplementChecklist({ mealSlots, foodItems, selectedDay,
 
           {/* Items */}
           <div style={{ flex: 1 }}>
-            {items.map((rec, i) => {
+            {items.length === 0 ? (
+              <p style={{ fontSize: 11, color: 'var(--text-light)', fontStyle: 'italic', padding: '4px 0', lineHeight: '28px' }}>
+                No supplements prescribed yet.
+              </p>
+            ) : items.map((rec, i) => {
               const checked = checkedSupplements?.has(rec.nutrient)
               return (
                 <div key={i} style={{
