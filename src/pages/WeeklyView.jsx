@@ -12,6 +12,26 @@ const DAYS = [
   { key: 'sun', label: 'Sun', full: 'Sunday'    },
 ]
 
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
+const TODAY_ISO = new Date().toISOString().slice(0, 10)
+
+function getWeekDates() {
+  const today = new Date()
+  const dow = today.getDay()
+  const diff = dow === 0 ? -6 : 1 - dow
+  const monday = new Date(today)
+  monday.setDate(today.getDate() + diff)
+  const result = {}
+  DAY_KEYS.forEach((key, i) => {
+    const d = new Date(monday)
+    d.setDate(monday.getDate() + i)
+    result[key] = d.toISOString().slice(0, 10)
+  })
+  return result
+}
+
+const WEEK_DATES = getWeekDates()
+
 const MEALS = [
   { key: 'breakfast', label: 'B', icon: '☀️' },
   { key: 'lunch',     label: 'L', icon: '🥗' },
@@ -273,28 +293,43 @@ export default function WeeklyView() {
             background: 'var(--surface-warm)',
           }}>
             <div />
-            {DAYS.map(day => (
-              <button
-                key={day.key}
-                ref={el => { headerRefs.current[day.key] = el }}
-                onClick={() => handleDayClick(day.key)}
-                style={{
-                  padding: '13px 6px', textAlign: 'center',
-                  fontSize: 12, fontWeight: 600,
-                  color: openDay === day.key ? '#E8735A' : 'var(--text-mid)',
-                  borderLeft: '1px solid var(--border)',
-                  letterSpacing: '0.2px',
-                  background: openDay === day.key ? '#FDF1EE' : 'transparent',
-                  border: 'none',
-                  borderLeft: '1px solid var(--border)',
-                  cursor: 'pointer',
-                  transition: 'color 0.15s, background 0.15s',
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-              >
-                {day.label}
-              </button>
-            ))}
+            {DAYS.map(day => {
+              const dateIso = WEEK_DATES[day.key]
+              const isToday = dateIso === TODAY_ISO
+              const dateLabel = new Date(dateIso + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+              return (
+                <button
+                  key={day.key}
+                  ref={el => { headerRefs.current[day.key] = el }}
+                  onClick={() => handleDayClick(day.key)}
+                  style={{
+                    padding: '10px 6px', textAlign: 'center',
+                    fontSize: 12, fontWeight: 600,
+                    color: openDay === day.key ? '#E8735A' : isToday ? 'var(--coral)' : 'var(--text-mid)',
+                    borderLeft: '1px solid var(--border)',
+                    letterSpacing: '0.2px',
+                    background: openDay === day.key ? '#FDF1EE' : 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    transition: 'color 0.15s, background 0.15s',
+                    fontFamily: "'Outfit', sans-serif",
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                  }}
+                >
+                  <span>{day.label}</span>
+                  <span style={{
+                    fontSize: 10, fontWeight: 400,
+                    color: isToday ? 'var(--coral)' : 'var(--text-light)',
+                  }}>{dateLabel}</span>
+                  {isToday && (
+                    <span style={{
+                      width: 3, height: 3, borderRadius: '50%',
+                      background: 'var(--coral)', display: 'block',
+                    }} />
+                  )}
+                </button>
+              )
+            })}
           </div>
 
           {/* Meal rows — dots only, no text */}

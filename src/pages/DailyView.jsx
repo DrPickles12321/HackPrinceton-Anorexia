@@ -368,12 +368,9 @@ function ParentNoteSection({ note, selectedDate, onSave }) {
         position: 'absolute', top: 0, left: '50%',
         transform: 'translateX(-50%) rotate(-1deg)',
         background: '#e8dcc8', borderRadius: 4,
-        padding: '3px 18px',
-        fontSize: 11, fontWeight: 700, color: '#7a6a52',
-        letterSpacing: '0.5px', textTransform: 'uppercase',
+        width: 64, height: 14,
         zIndex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
-        fontFamily: "'Outfit', sans-serif",
-      }}>Your Note</div>
+      }} />
 
       {/* Notebook card */}
       <div style={{
@@ -772,12 +769,9 @@ export default function DailyView() {
               position: 'absolute', top: 0, left: '50%',
               transform: 'translateX(-50%) rotate(-1deg)',
               background: '#e8dcc8', borderRadius: 4,
-              padding: '3px 14px',
-              fontSize: 10, fontWeight: 700, color: '#7a6a52',
-              letterSpacing: '0.5px', textTransform: 'uppercase',
+              width: 64, height: 14,
               zIndex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
-              fontFamily: "'Outfit', sans-serif", whiteSpace: 'nowrap',
-            }}>From Clinician</div>
+            }} />
 
             {/* Notebook card */}
             <div style={{

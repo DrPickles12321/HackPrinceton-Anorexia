@@ -1,25 +1,22 @@
 import { lookupNutrition } from './nutritionService'
 
 async function callClaude(prompt) {
-  const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('No API key — add VITE_ANTHROPIC_API_KEY to .env')
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
-      'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       'anthropic-dangerous-direct-browser-access': 'true',
       'content-type': 'application/json',
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1000,
+      max_tokens: 500,
       messages: [{ role: 'user', content: prompt }],
     }),
   })
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Anthropic API ${res.status}: ${text.slice(0, 120)}`)
+    const errText = await res.text()
+    throw new Error(`Anthropic API ${res.status}: ${errText}`)
   }
   const data = await res.json()
   return data.content[0]?.text?.trim() || ''

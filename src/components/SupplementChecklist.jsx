@@ -24,14 +24,10 @@ export default function SupplementChecklist({ mealSlots, foodItems, selectedDay,
         transform: 'translateX(-50%) rotate(-1deg)',
         background: '#e8dcc8',
         borderRadius: 4,
-        padding: '3px 14px',
-        fontSize: 10, fontWeight: 700, color: '#7a6a52',
-        letterSpacing: '0.5px', textTransform: 'uppercase',
+        width: 64, height: 14,
         zIndex: 1,
         boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
-        fontFamily: "'Outfit', sans-serif",
-        whiteSpace: 'nowrap',
-      }}>Supplements</div>
+      }} />
 
       {/* Notebook card */}
       <div style={{
