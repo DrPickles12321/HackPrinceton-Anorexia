@@ -512,6 +512,10 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
   const [expandedNoteId, setExpandedNoteId] = useState(null)
   const [confirmClear, setConfirmClear] = useState(false)
 
+  useEffect(() => {
+    if (savedClinicianNotes.length === 0) { setShowSaved(false); setConfirmClear(false) }
+  }, [savedClinicianNotes.length])
+
   const today = new Date().toISOString().slice(0, 10)
   const todayNote = clinicianNotes.find(n => n.created_at?.slice(0, 10) === today)
   const latest = todayNote || clinicianNotes[0] || null
@@ -655,7 +659,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                     </span>
                   </div>
                   <button
-                    onClick={() => { unsaveClinicianNote?.(note.id); if (savedClinicianNotes.length === 1) setShowSaved(false) }}
+                    onClick={() => unsaveClinicianNote?.(note.id)}
                     onMouseEnter={e => { e.currentTarget.style.color = 'var(--pink)' }}
                     onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-light)' }}
                     style={{
