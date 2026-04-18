@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext'
 
 const FirebaseDataContext = createContext(null)
 
-const DEFAULT_TARGETS = { protein: 95, carbs: 145, fruitsVeggies: 225 }
+const DEFAULT_TARGETS = { protein: 75, carbs: 150, fruitsVeggies: 200 }
 const DEFAULT_MEAL_TIMES = { breakfast: '08:00', lunch: '13:00', snack: '15:30', dinner: '19:00' }
 
 function fbToArr(val) {

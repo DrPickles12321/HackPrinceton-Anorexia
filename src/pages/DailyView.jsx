@@ -783,22 +783,18 @@ export default function DailyView() {
       .sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at))[0] || null
   }
 
-  // Deduplicated weekly counts — one entry per slot, latest log wins
+  // Weekly status counts from Firebase mealStatuses (per-user, not shared Supabase)
   const weeklyStatusCounts = useMemo(() => {
-    const latestBySlot = {}
-    for (const log of mealLogs) {
-      const existing = latestBySlot[log.meal_slot_id]
-      if (!existing || new Date(log.logged_at) > new Date(existing.logged_at)) {
-        latestBySlot[log.meal_slot_id] = log
+    let okay = 0, difficult = 0, refused = 0
+    for (const dateStatuses of Object.values(mealStatuses)) {
+      for (const status of Object.values(dateStatuses)) {
+        if (status === 'okay') okay++
+        else if (status === 'difficult') difficult++
+        else if (status === 'refused') refused++
       }
     }
-    const latest = Object.values(latestBySlot)
-    return {
-      okay:      latest.filter(l => l.status === 'okay').length,
-      difficult: latest.filter(l => l.status === 'difficult').length,
-      refused:   latest.filter(l => l.status === 'refused').length,
-    }
-  }, [mealLogs])
+    return { okay, difficult, refused }
+  }, [mealStatuses])
 
   function handleDragEnd(event) {
     const { active, over } = event

@@ -30,6 +30,8 @@ export default function LoginScreen() {
         const writes = {
           [`users/${uid}/role`]:  role,
           [`users/${uid}/email`]: email,
+          [`users/${uid}/nutritionalTargets`]: { protein: 75, carbs: 150, fruitsVeggies: 200 },
+          [`users/${uid}/insights`]: { okay: 0, difficult: 0, refused: 0 },
         }
         if (role === 'parent') {
           const code = generateFamilyCode()
