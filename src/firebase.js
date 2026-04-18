@@ -3,13 +3,14 @@ import { getAuth } from 'firebase/auth'
 import { getDatabase } from 'firebase/database'
 
 const firebaseConfig = {
-  apiKey:            import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain:        import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL:       import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId:         import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket:     import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey:            import.meta.env.AIzaSyB_NolvYUxepL7daqEGsg_c2wgN50SidPI,
+  authDomain:        import.meta.env.plate-together.firebaseapp.com,
+  databaseURL:       import.meta.env.https://plate-together-default-rtdb.firebaseio.com,
+  projectId:         import.meta.env.plate-together,
+  storageBucket:     import.meta.env.plate-together.firebasestorage.app,
+  messagingSenderId: import.meta.env.987215224656,
+  appId:             import.meta.env.1:987215224656:web:eaef7fd283231bd81c1655,
+  measurementId:     import.meta.env.G-PQCG8MW740,
 }
 
 const app = initializeApp(firebaseConfig)
