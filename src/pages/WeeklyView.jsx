@@ -226,8 +226,8 @@ export default function WeeklyView() {
   const openDayObj = DAYS.find(d => d.key === openDay)
 
   return (
-    <div style={{ flex: 1, padding: '28px 32px', overflowY: 'auto' }}>
-      <div style={{ maxWidth: 920, margin: '0 auto' }}>
+    <div style={{ flex: 1, padding: '28px 48px', overflowY: 'auto' }}>
+      <div style={{ maxWidth: '100%' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 26 }}>
@@ -238,13 +238,9 @@ export default function WeeklyView() {
             <p style={{ fontSize: 14, color: 'var(--text-mid)' }}>Click a day header for the daily nutrition summary</p>
           </div>
           {totalLogged > 0 && (
-            <div style={{
-              background: 'white', borderRadius: 16, padding: '12px 20px',
-              border: '1.5px solid var(--mint-mid)', textAlign: 'center',
-              boxShadow: '0 2px 10px rgba(72,122,103,0.12)',
-            }}>
-              <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--mint)', lineHeight: 1 }}>{pct}%</div>
-              <div style={{ fontSize: 11, color: 'var(--text-mid)', marginTop: 3, fontWeight: 500 }}>okay meals</div>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontSize: 32, fontWeight: 700, color: '#E8735A', lineHeight: 1 }}>{pct}%</div>
+              <div style={{ fontSize: 12, color: 'var(--text-light)', marginTop: 3, fontWeight: 500 }}>okay meals</div>
             </div>
           )}
         </div>
