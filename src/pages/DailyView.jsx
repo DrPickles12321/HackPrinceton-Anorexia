@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDroppable } from '@dnd-kit/core'
 import FoodSidebar from '../components/FoodSidebar'
@@ -15,11 +15,18 @@ const DAYS = [
   { key: 'sun', label: 'Sun' },
 ]
 
+const DEFAULT_MEAL_TIMES = {
+  breakfast: '08:00',
+  lunch: '13:00',
+  snack: '15:30',
+  dinner: '19:00',
+}
+
 const MEALS = [
-  { key: 'breakfast', label: 'Breakfast', icon: '☀️', time: '8:00 AM', color: 'var(--coral)', bg: 'var(--coral-light)' },
-  { key: 'lunch',     label: 'Lunch',     icon: '🥗', time: '1:00 PM', color: 'var(--peach)', bg: 'var(--peach-light)' },
-  { key: 'snack',     label: 'Snack',     icon: '🍎', time: '3:30 PM', color: 'var(--pink)',  bg: 'var(--pink-light)' },
-  { key: 'dinner',    label: 'Dinner',    icon: '🌙', time: '7:00 PM', color: 'var(--mint)',  bg: 'var(--mint-light)' },
+  { key: 'breakfast', label: 'Breakfast', icon: '☀️', color: 'var(--coral)', bg: 'var(--coral-light)' },
+  { key: 'lunch',     label: 'Lunch',     icon: '🥗', color: 'var(--peach)', bg: 'var(--peach-light)' },
+  { key: 'snack',     label: 'Snack',     icon: '🍎', color: 'var(--pink)',  bg: 'var(--pink-light)' },
+  { key: 'dinner',    label: 'Dinner',    icon: '🌙', color: 'var(--mint)',  bg: 'var(--mint-light)' },
 ]
 
 const STATUS_OPTIONS = [
@@ -31,6 +38,28 @@ const STATUS_OPTIONS = [
 function getTodayKey() {
   const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
   return days[new Date().getDay()]
+}
+
+function parseTimeValue(value) {
+  const [hour = '08', minute = '00'] = (value || '08:00').split(':')
+  const numericHour = Number(hour)
+  const displayHour = numericHour % 12 === 0 ? 12 : numericHour % 12
+  return {
+    hour: String(displayHour),
+    minute: String(minute).padStart(2, '0'),
+    period: numericHour >= 12 ? 'PM' : 'AM',
+  }
+}
+
+function build24HourTime(hourValue, minuteValue, period) {
+  const hour = Number(hourValue)
+  const minute = Number(minuteValue)
+  if (!Number.isInteger(hour) || hour < 1 || hour > 12) return null
+  if (!Number.isInteger(minute) || minute < 0 || minute > 59) return null
+  const normalizedHour = period === 'PM'
+    ? (hour === 12 ? 12 : hour + 12)
+    : (hour === 12 ? 0 : hour)
+  return `${String(normalizedHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
 }
 
 function DropZone({ slot, food }) {
@@ -64,8 +93,61 @@ function DropZone({ slot, food }) {
   )
 }
 
-function MealCard({ meal, slot, food, latestLog, onQuickLog }) {
+function MealCard({ meal, slot, food, latestLog, onQuickLog, time, onTimeChange }) {
   const loggedStatus = latestLog?.status || null
+  const initialTime = parseTimeValue(time)
+  const [pendingTime, setPendingTime] = useState(initialTime)
+  const [lastValidHour, setLastValidHour] = useState(initialTime.hour)
+
+  useEffect(() => {
+    const nextTime = parseTimeValue(time)
+    setPendingTime(nextTime)
+    setLastValidHour(nextTime.hour)
+  }, [time])
+
+  const handleHourChange = value => {
+    const next = value.replace(/[^0-9]/g, '').slice(0, 2)
+    if (next === '') {
+      setPendingTime(prev => ({ ...prev, hour: '' }))
+      return
+    }
+
+    const numeric = Number(next)
+    if (numeric === 0) {
+      setPendingTime(prev => ({ ...prev, hour: next }))
+      return
+    }
+
+    if (numeric >= 1 && numeric <= 12) {
+      setPendingTime(prev => ({ ...prev, hour: String(numeric) }))
+      setLastValidHour(String(numeric))
+    }
+  }
+
+  const handleHourBlur = () => {
+    const hourText = pendingTime.hour.trim() || lastValidHour
+    const nextTime = build24HourTime(hourText, pendingTime.minute, pendingTime.period)
+    if (nextTime) {
+      const normalizedHour = String(Number(hourText))
+      setPendingTime(prev => ({ ...prev, hour: normalizedHour }))
+      setLastValidHour(normalizedHour)
+      onTimeChange(meal.key, nextTime)
+    }
+  }
+
+  const handleMinuteChange = value => {
+    const next = value.replace(/[^0-9]/g, '').slice(0, 2)
+    setPendingTime(prev => ({ ...prev, minute: next }))
+  }
+
+  const handleMinuteBlur = () => {
+    const minuteText = pendingTime.minute.trim() || '00'
+    const nextTime = build24HourTime(pendingTime.hour || '1', minuteText, pendingTime.period)
+    if (nextTime) {
+      setPendingTime(prev => ({ ...prev, minute: String(Number(minuteText)).padStart(2, '0') }))
+      onTimeChange(meal.key, nextTime)
+    }
+  }
 
   return (
     <div style={{
@@ -84,7 +166,78 @@ function MealCard({ meal, slot, food, latestLog, onQuickLog }) {
           <span style={{ fontSize: 17 }}>{meal.icon}</span>
           <span style={{ fontWeight: 600, fontSize: 14, color: meal.color }}>{meal.label}</span>
         </div>
-        <span style={{ fontSize: 12, color: meal.color, opacity: 0.6, fontWeight: 500 }}>{meal.time}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.88)', borderRadius: 10, padding: '5px 8px' }}>
+          {(() => {
+            const { hour, minute, period } = pendingTime
+
+            const setPeriod = nextPeriod => {
+              const nextTime = build24HourTime(hour || lastValidHour, minute || '00', nextPeriod)
+              if (nextTime) onTimeChange(meal.key, nextTime)
+              setPendingTime(prev => ({ ...prev, period: nextPeriod }))
+            }
+
+            return (
+              <>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={hour}
+                  onChange={e => handleHourChange(e.target.value)}
+                  onBlur={handleHourBlur}
+                  style={{
+                    width: 24,
+                    border: 'none',
+                    background: 'transparent',
+                    color: meal.color,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    outline: 'none',
+                  }}
+                />
+                <span style={{ color: meal.color, fontSize: 12, fontWeight: 700 }}>:</span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={minute}
+                  onChange={e => handleMinuteChange(e.target.value)}
+                  onBlur={handleMinuteBlur}
+                  style={{
+                    width: 28,
+                    border: 'none',
+                    background: 'transparent',
+                    color: meal.color,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    textAlign: 'center',
+                    outline: 'none',
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 4, marginLeft: 4 }}>
+                  {['AM', 'PM'].map(option => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setPeriod(option)}
+                      style={{
+                        borderRadius: 8,
+                        border: 'none',
+                        padding: '4px 6px',
+                        background: period === option ? meal.color : 'rgba(255,255,255,0.7)',
+                        color: period === option ? 'white' : meal.color,
+                        fontSize: 10,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )
+          })()}
+        </div>
       </div>
 
       {/* Body: drop zone + status buttons */}
@@ -123,12 +276,37 @@ function MealCard({ meal, slot, food, latestLog, onQuickLog }) {
   )
 }
 
+function formatTimeLabel(value) {
+  if (!value) return ''
+  const [hour, minute] = value.split(':').map(Number)
+  const suffix = hour >= 12 ? 'PM' : 'AM'
+  const normalizedHour = hour % 12 === 0 ? 12 : hour % 12
+  return `${normalizedHour}:${String(minute).padStart(2, '0')} ${suffix}`
+}
+
 export default function DailyView() {
   const { mealSlots, foodItems, mealLogs, updateMealSlot, insertMealLog } = useOutletContext()
   const [selectedDay, setSelectedDay] = useState(getTodayKey)
   const [activeDrag, setActiveDrag] = useState(null)
+  const [mealTimes, setMealTimes] = useState(() => {
+    if (typeof window === 'undefined') return DEFAULT_MEAL_TIMES
+    try {
+      const stored = window.localStorage.getItem('parentDailyMealTimes')
+      return stored ? JSON.parse(stored) : DEFAULT_MEAL_TIMES
+    } catch {
+      return DEFAULT_MEAL_TIMES
+    }
+  })
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  function updateMealTime(mealType, value) {
+    const nextTimes = { ...mealTimes, [mealType]: value }
+    setMealTimes(nextTimes)
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('parentDailyMealTimes', JSON.stringify(nextTimes))
+    }
+  }
 
   function getSlot(mealType) {
     return mealSlots.find(s => s.day === selectedDay && s.meal_type === mealType)
@@ -240,6 +418,8 @@ export default function DailyView() {
                   food={getFoodById(slot?.assigned_food_id)}
                   latestLog={getLatestLog(slot?.id)}
                   onQuickLog={handleQuickLog}
+                  time={mealTimes[meal.key]}
+                  onTimeChange={updateMealTime}
                 />
               )
             })}
