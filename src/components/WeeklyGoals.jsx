@@ -46,43 +46,55 @@ export default function WeeklyGoals({ mealSlots, foodItems, mode = 'parent', all
     fruitsVeggies: (targets.fruitsVeggies || 0) * 7,
   }) : null, [targets])
 
+  const hasAnyLoggedFood = allMealItems && Object.values(allMealItems).some(
+    dayMeals => ['breakfast', 'lunch', 'dinner', 'snack'].some(
+      mt => Array.isArray(dayMeals[mt]) && dayMeals[mt].length > 0
+    )
+  )
+
   const actuals = useMemo(() => {
     const sums = { protein: 0, carbs: 0, fruitsVeggies: 0 }
     const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack']
 
-    if (allMealItems && Object.keys(allMealItems).length > 0) {
-      for (const dateStr of Object.keys(allMealItems)) {
-        const dayMeals = allMealItems[dateStr] || {}
-        for (const mealType of MEAL_TYPES) {
-          const items = dayMeals[mealType] || []
-          for (const item of items) {
-            const info = lookupNutrition(item.name, item.category || 'working_on')
-            for (const n of NUTRIENTS) sums[n.key] += n.getActual(info)
+    if (allMealItems !== undefined) {
+      if (hasAnyLoggedFood) {
+        for (const dateStr of Object.keys(allMealItems)) {
+          const dayMeals = allMealItems[dateStr] || {}
+          for (const mealType of MEAL_TYPES) {
+            const items = dayMeals[mealType] || []
+            for (const item of items) {
+              const info = lookupNutrition(item.name, item.category || 'working_on')
+              for (const n of NUTRIENTS) sums[n.key] += n.getActual(info)
+            }
           }
         }
       }
-    } else {
-      for (const slot of mealSlots) {
-        if (!slot.assigned_food_id) continue
-        const food = foodItems.find(f => f.id === slot.assigned_food_id)
-        if (!food) continue
-        const info = lookupNutrition(food.name, food.category)
-        for (const n of NUTRIENTS) sums[n.key] += n.getActual(info)
+      return {
+        protein:       Math.round(sums.protein),
+        carbs:         Math.round(sums.carbs),
+        fruitsVeggies: Math.round(sums.fruitsVeggies),
       }
     }
 
+    for (const slot of mealSlots) {
+      if (!slot.assigned_food_id) continue
+      const food = foodItems.find(f => f.id === slot.assigned_food_id)
+      if (!food) continue
+      const info = lookupNutrition(food.name, food.category)
+      for (const n of NUTRIENTS) sums[n.key] += n.getActual(info)
+    }
     return {
       protein:       Math.round(sums.protein),
       carbs:         Math.round(sums.carbs),
       fruitsVeggies: Math.round(sums.fruitsVeggies),
     }
-  }, [mealSlots, foodItems, allMealItems])
+  }, [mealSlots, foodItems, allMealItems, hasAnyLoggedFood])
 
-  const totalFilled = (allMealItems && Object.keys(allMealItems).length > 0)
-    ? Object.values(allMealItems).reduce((acc, dayMeals) =>
+  const totalFilled = allMealItems !== undefined
+    ? (hasAnyLoggedFood ? Object.values(allMealItems).reduce((acc, dayMeals) =>
         acc + ['breakfast', 'lunch', 'dinner', 'snack'].filter(
           mt => Array.isArray(dayMeals[mt]) && dayMeals[mt].length > 0
-        ).length, 0)
+        ).length, 0) : 0)
     : mealSlots.filter(s => s.assigned_food_id).length
 
   return (
@@ -110,7 +122,9 @@ export default function WeeklyGoals({ mealSlots, foodItems, mode = 'parent', all
         </p>
       ) : totalFilled === 0 ? (
         <p style={{ fontSize: 13, color: 'var(--text-light)', textAlign: 'center', padding: '24px 0' }}>
-          No meals planned yet — drag foods onto the grid to start.
+          {allMealItems !== undefined
+            ? 'No meals logged yet — nothing to compare against targets.'
+            : 'No meals planned yet — drag foods onto the grid to start.'}
         </p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

@@ -25,17 +25,29 @@ function StatCard({ icon, label, value, subtext, tone = 'neutral' }) {
 }
 
 export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMealItems }) {
-  const hasFirebaseData = allMealItems && Object.keys(allMealItems).length > 0
+  const hasAnyLoggedFood = allMealItems && Object.values(allMealItems).some(
+    dayMeals => Object.values(dayMeals).some(
+      items => Array.isArray(items) && items.length > 0
+    )
+  )
 
   const insights = useMemo(() => {
-    if (hasFirebaseData) return computeInsightsFromMealItems(allMealItems)
+    if (allMealItems !== undefined) {
+      return hasAnyLoggedFood
+        ? computeInsightsFromMealItems(allMealItems)
+        : { totalLogs: 0, okay: 0, difficult: 0, refused: 0, hardestMealType: null, topRefusedCategory: null }
+    }
     return computeInsights({ mealLogs, foodItems, mealSlots })
-  }, [allMealItems, mealLogs, foodItems, mealSlots, hasFirebaseData])
+  }, [allMealItems, hasAnyLoggedFood, mealLogs, foodItems, mealSlots])
 
   const nutritionInsights = useMemo(() => {
-    if (hasFirebaseData) return computeNutritionInsightsFromMealItems(allMealItems)
+    if (allMealItems !== undefined) {
+      return hasAnyLoggedFood
+        ? computeNutritionInsightsFromMealItems(allMealItems)
+        : { avgDailyCalories: null, topRecoveryNutrient: null }
+    }
     return computeNutritionInsights({ mealSlots, foodItems })
-  }, [allMealItems, mealSlots, foodItems, hasFirebaseData])
+  }, [allMealItems, hasAnyLoggedFood, mealSlots, foodItems])
 
   return (
     <section className="mt-8 bg-gray-50 rounded-xl p-6">
@@ -91,7 +103,7 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMeal
               icon="⚡"
               label="Avg daily energy"
               value={`${nutritionInsights.avgDailyCalories} kcal`}
-              subtext="estimated from planned meals"
+              subtext="estimated from logged meals"
               tone="neutral"
             />
           )}
@@ -100,7 +112,7 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMeal
               icon={FLAG_CONFIG[nutritionInsights.topRecoveryNutrient.flag]?.icon || '🌟'}
               label="Top recovery nutrient"
               value={FLAG_CONFIG[nutritionInsights.topRecoveryNutrient.flag]?.label || nutritionInsights.topRecoveryNutrient.flag}
-              subtext={`present in ${nutritionInsights.topRecoveryNutrient.count} planned meal${nutritionInsights.topRecoveryNutrient.count !== 1 ? 's' : ''}`}
+              subtext={`present in ${nutritionInsights.topRecoveryNutrient.count} logged meal${nutritionInsights.topRecoveryNutrient.count !== 1 ? 's' : ''}`}
               tone="good"
             />
           )}
