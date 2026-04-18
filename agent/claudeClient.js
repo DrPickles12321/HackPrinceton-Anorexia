@@ -26,13 +26,13 @@ export async function reactiveResponse(threadHistory, weekSummary) {
   const prompt = `Here is the recent conversation:\n${historyText}\n\nHere is the meal data from their app this week:\n${weekSummary}\n\nShould you add something to this conversation? Reply with YES or NO on the first line, then one sentence explaining why. If YES, add a second paragraph with what you would say (1-2 sentences max, warm and brief).`
 
   const raw = await callClaude(prompt)
-  const lines = raw.split('\n').filter(l => l.trim())
-  const decision = lines[0]?.toUpperCase().startsWith('YES')
+  const lines = raw.split('\n')
+  const decision = lines[0]?.trim().toUpperCase().startsWith('YES')
 
   if (!decision) return { shouldRespond: false, reply: null }
 
-  const replyLines = lines.slice(2).join(' ').trim()
-  return { shouldRespond: true, reply: replyLines || lines[1] || null }
+  const replyText = lines.slice(2).join(' ').replace(/\s+/g, ' ').trim()
+  return { shouldRespond: true, reply: replyText || null }
 }
 
 /**

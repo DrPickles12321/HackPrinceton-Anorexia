@@ -40,8 +40,13 @@ export default function MealLogModal({ isOpen, onClose, slot, foodName, foodCate
     setIsSubmitting(true)
     try {
       await onSubmit({ slotId: slot.id, status, note: note.trim() || null })
-
-      // Sync to meal_events for the iMessage agent
+    } catch (err) {
+      console.error('Failed to save meal log:', err)
+      setIsSubmitting(false)
+      return
+    }
+    // Primary write succeeded. Sync to agent table — never block UX on this.
+    try {
       const date = slotDayToISODate(slot.day)
       const foodItems = foodName ? [{ name: foodName, category: foodCategory || 'familiar' }] : []
       await supabase.from('meal_events').insert({
@@ -50,13 +55,11 @@ export default function MealLogModal({ isOpen, onClose, slot, foodName, foodCate
         status,
         food_items: foodItems,
       })
-
-      setStatus(null); setNote(''); onClose()
-    } catch (err) {
-      console.error('Failed to save meal log:', err)
-    } finally {
-      setIsSubmitting(false)
+    } catch (syncErr) {
+      console.warn('Agent sync failed (non-critical):', syncErr)
     }
+    setIsSubmitting(false)
+    setStatus(null); setNote(''); onClose()
   }
 
   const syncWarning = slot && !slot.id
