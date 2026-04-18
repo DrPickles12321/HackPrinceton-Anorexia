@@ -31,6 +31,9 @@ export default function ClinicianView() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedDay, setSelectedDay] = useState(null)
+  const [apptDateTime, setApptDateTime] = useState('')
+  const [apptSaving, setApptSaving] = useState(false)
+  const [apptSaved, setApptSaved] = useState(false)
   const { setStatus } = useRealtimeStatus()
   const { showToast } = useToast()
 
@@ -162,6 +165,27 @@ export default function ClinicianView() {
     }
   }
 
+  async function handleScheduleAppointment(e) {
+    e.preventDefault()
+    if (!apptDateTime || apptSaving) return
+    setApptSaving(true)
+    try {
+      const { error } = await supabase.from('appointments').insert({
+        scheduled_at: new Date(apptDateTime).toISOString(),
+        clinician_name: 'Clinician',
+        patient_name: 'Patient',
+      })
+      if (error) throw error
+      setApptSaved(true)
+      setApptDateTime('')
+      setTimeout(() => setApptSaved(false), 3000)
+    } catch (err) {
+      console.error('Failed to schedule appointment:', err)
+    } finally {
+      setApptSaving(false)
+    }
+  }
+
   const latestLogBySlot = useMemo(() => {
     const map = {}
     for (const log of mealLogs) {
@@ -201,6 +225,46 @@ export default function ClinicianView() {
           <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} />
           <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" />
           <NutritionalTargets />
+          <div style={{
+            background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb',
+            padding: '20px 24px', marginTop: 16,
+          }}>
+            <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 12 }}>
+              Schedule Session
+            </h2>
+            <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 14 }}>
+              The agent will send a prep summary to the iMessage thread 30 minutes before.
+            </p>
+            <form onSubmit={handleScheduleAppointment} style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <input
+                type="datetime-local"
+                value={apptDateTime}
+                onChange={e => setApptDateTime(e.target.value)}
+                required
+                style={{
+                  border: '1.5px solid #d1d5db', borderRadius: 10, padding: '8px 12px',
+                  fontSize: 13, color: '#111827', fontFamily: "'Outfit', sans-serif",
+                  outline: 'none',
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!apptDateTime || apptSaving}
+                style={{
+                  padding: '9px 18px', fontSize: 13, fontWeight: 600, borderRadius: 10,
+                  border: 'none', background: '#6366f1', color: 'white',
+                  cursor: apptDateTime && !apptSaving ? 'pointer' : 'not-allowed',
+                  opacity: !apptDateTime || apptSaving ? 0.5 : 1,
+                  fontFamily: "'Outfit', sans-serif",
+                }}
+              >
+                {apptSaving ? 'Saving…' : 'Schedule'}
+              </button>
+              {apptSaved && (
+                <span style={{ fontSize: 12, color: '#10b981', fontWeight: 600 }}>Scheduled ✓</span>
+              )}
+            </form>
+          </div>
           <NotesPanel
             notes={notes}
             mode="clinician"
