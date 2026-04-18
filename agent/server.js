@@ -1,11 +1,10 @@
-import { Spectrum, text } from 'spectrum-ts'
+import { Spectrum } from 'spectrum-ts'
 import { imessage } from 'spectrum-ts/providers/imessage'
 import { supabase } from './supabaseClient.js'
 import { buildWeekSummary, getTodayDinner } from './mealSummary.js'
 import { reactiveResponse, dinnerWindowMessage, appointmentPrepMessage } from './claudeClient.js'
 
 const THREAD_ID    = process.env.SPECTRUM_THREAD_ID
-const SPACE_TYPE   = process.env.SPECTRUM_SPACE_TYPE || 'direct'
 const DINNER_HOUR  = parseInt(process.env.DINNER_WINDOW_HOUR   || '20', 10)
 const DINNER_MINUTE = parseInt(process.env.DINNER_WINDOW_MINUTE || '30', 10)
 
@@ -21,15 +20,16 @@ function pushHistory(sender, msgText) {
   if (threadHistory.length > 20) threadHistory.shift()
 }
 
-async function sendToThread(spectrum, msgText) {
-  const space = { id: THREAD_ID, type: SPACE_TYPE }
-  await spectrum.send(space, text(msgText))
+let spectrum
+
+async function sendToThread(msgText) {
+  await spectrum.send({ id: THREAD_ID, type: 'direct' }, { type: 'text', text: msgText })
 }
 
 // ── Dinner window timer ────────────────────────────────────────────────────
 let dinnerFiredToday = null
 
-function startDinnerTimer(spectrum) {
+function startDinnerTimer() {
   setInterval(async () => {
     const now = new Date()
     const todayKey = now.toISOString().split('T')[0]
@@ -41,7 +41,7 @@ function startDinnerTimer(spectrum) {
       const dinnerEvent = await getTodayDinner(supabase)
       if (!dinnerEvent || dinnerEvent.status === 'refused') {
         const msg = await dinnerWindowMessage(dinnerEvent)
-        await sendToThread(spectrum, msg)
+        await sendToThread(msg)
         console.log('[dinner timer] sent:', msg)
       }
     } catch (err) {
@@ -51,7 +51,7 @@ function startDinnerTimer(spectrum) {
 }
 
 // ── Appointment prep timer ─────────────────────────────────────────────────
-function startAppointmentTimer(spectrum) {
+function startAppointmentTimer() {
   setInterval(async () => {
     try {
       const now = new Date()
@@ -64,14 +64,14 @@ function startAppointmentTimer(spectrum) {
         .lte('scheduled_at', soon.toISOString())
         .eq('prep_sent', false)
 
-      if (error) return // appointments table may not exist yet
+      if (error) return
 
       const weekSummary = await buildWeekSummary(supabase)
       for (const appt of data || []) {
         const msg = await appointmentPrepMessage(weekSummary, appt.clinician_name)
-        await sendToThread(spectrum, msg)
+        await sendToThread(msg)
         await supabase.from('appointments').update({ prep_sent: true }).eq('id', appt.id)
-        console.log('[appt timer] sent prep for:', appt.clinician_name, appt.scheduled_at)
+        console.log('[appt timer] sent prep for:', appt.clinician_name)
       }
     } catch (err) {
       console.error('[appt timer] error:', err)
@@ -82,23 +82,25 @@ function startAppointmentTimer(spectrum) {
 // ── Main ───────────────────────────────────────────────────────────────────
 async function main() {
   console.log('Connecting to Spectrum...')
-  const spectrum = await Spectrum({
+  spectrum = await Spectrum({
     projectId: process.env.SPECTRUM_PROJECT_ID,
     projectSecret: process.env.SPECTRUM_PROJECT_SECRET,
     providers: [imessage.config()],
   })
   console.log('Connected. Listening on thread:', THREAD_ID)
 
-  startDinnerTimer(spectrum)
-  startAppointmentTimer(spectrum)
+  startDinnerTimer()
+  startAppointmentTimer()
 
   for await (const [space, message] of spectrum.messages) {
-    console.log('[incoming] space.id:', space.id, '| THREAD_ID:', THREAD_ID, '| match:', space.id === THREAD_ID)
+    console.log('[incoming] space.id:', space.id, '| match:', space.id === THREAD_ID)
 
-    const sender = message.sender?.id || 'unknown'
-    const msgText = message.content?.[0]?.text || message.text || ''
+    if (space.id !== THREAD_ID) continue
+
+    const msgText = message.content?.text || message.content?.[0]?.text || message.text || ''
     if (!msgText.trim()) continue
 
+    const sender = message.sender?.id || 'unknown'
     pushHistory(sender, msgText)
     console.log(`[message] ${sender}: ${msgText}`)
 
@@ -108,7 +110,7 @@ async function main() {
       const { shouldRespond, reply } = await reactiveResponse(last5, weekSummary)
 
       if (shouldRespond && reply) {
-        await sendToThread(spectrum, reply)
+        await space.send(reply)
         pushHistory('agent', reply)
         console.log('[agent reply]', reply)
       } else {

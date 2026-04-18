@@ -23,15 +23,18 @@ export async function reactiveResponse(threadHistory, weekSummary) {
     .map(m => `${m.sender}: ${m.text}`)
     .join('\n')
 
-  const prompt = `Here is the recent conversation:\n${historyText}\n\nHere is the meal data from their app this week:\n${weekSummary}\n\nShould you add something to this conversation? Reply with YES or NO on the first line, then one sentence explaining why. If YES, add a second paragraph with what you would say (1-2 sentences max, warm and brief).`
+  const lastMessage = threadHistory[threadHistory.length - 1]?.text?.toLowerCase() || ''
+  const isDirectQuestion = /how|what|which|did|was|any|tell|show|week|meal|food|hard|difficult|refus/i.test(lastMessage)
+
+  const prompt = `Here is the recent conversation:\n${historyText}\n\nHere is the meal data from their app this week:\n${weekSummary}\n\n${isDirectQuestion ? 'Someone asked a direct question about meals. You MUST respond with a warm, helpful answer based on the data above.' : 'Should you add something? Reply YES or NO on the first line. Only say YES if you have something genuinely useful.'}\n\nReply with YES or NO on the first line. If YES, write your response (2-3 sentences max, warm and conversational) after a blank line.`
 
   const raw = await callClaude(prompt)
   const lines = raw.split('\n')
-  const decision = lines[0]?.trim().toUpperCase().startsWith('YES')
+  const decision = isDirectQuestion || lines[0]?.trim().toUpperCase().startsWith('YES')
 
   if (!decision) return { shouldRespond: false, reply: null }
 
-  const replyText = lines.slice(2).join(' ').replace(/\s+/g, ' ').trim()
+  const replyText = lines.slice(2).join(' ').replace(/\s+/g, ' ').trim() || lines.slice(1).join(' ').replace(/\s+/g, ' ').trim()
   return { shouldRespond: true, reply: replyText || null }
 }
 

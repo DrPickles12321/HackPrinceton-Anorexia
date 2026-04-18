@@ -1,4 +1,4 @@
-const DEMO_FAMILY_ID = '11111111-1111-1111-1111-111111111111'
+const DEMO_FAMILY_ID = process.env.FAMILY_ID || '11111111-1111-1111-1111-111111111111'
 
 const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']
 const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' }

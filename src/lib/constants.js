@@ -1,3 +1,6 @@
+export function getFamilyId() {
+  return localStorage.getItem('demoFamilyId') || '11111111-1111-1111-1111-111111111111'
+}
 export const DEMO_FAMILY_ID = '11111111-1111-1111-1111-111111111111'
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']

@@ -1,8 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 export default function Login() {
   const navigate = useNavigate()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const r = localStorage.getItem('demoRole')
@@ -10,10 +15,29 @@ export default function Login() {
     if (r === 'clinician') navigate('/clinician', { replace: true })
   }, [navigate])
 
-  function pickRole(role) {
+  async function pickRole(role) {
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter your email and password.')
+      return
+    }
+    setLoading(true)
+    setError('')
+    const { data, error: err } = await supabase
+      .from('family_accounts')
+      .select('family_id')
+      .eq('email', email.trim().toLowerCase())
+      .eq('password', password)
+      .maybeSingle()
+
+    if (err || !data) {
+      setError('Invalid email or password.')
+      setLoading(false)
+      return
+    }
     localStorage.setItem('demoRole', role)
-    localStorage.setItem('demoFamilyId', '11111111-1111-1111-1111-111111111111')
+    localStorage.setItem('demoFamilyId', data.family_id)
     navigate(role === 'parent' ? '/parent/daily' : '/clinician', { replace: true })
+    setLoading(false)
   }
 
   return (
@@ -121,6 +145,35 @@ export default function Login() {
             </p>
           </div>
 
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              style={{
+                padding: '12px 16px', borderRadius: 12, fontSize: 14,
+                border: '1.5px solid var(--border)', background: 'white',
+                color: 'var(--text-dark)', fontFamily: "'Outfit', sans-serif",
+                outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && pickRole('parent')}
+              style={{
+                padding: '12px 16px', borderRadius: 12, fontSize: 14,
+                border: '1.5px solid var(--border)', background: 'white',
+                color: 'var(--text-dark)', fontFamily: "'Outfit', sans-serif",
+                outline: 'none', width: '100%', boxSizing: 'border-box',
+              }}
+            />
+            {error && <p style={{ fontSize: 12, color: 'var(--pink)', margin: 0 }}>{error}</p>}
+          </div>
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <RoleCard
               onClick={() => pickRole('parent')}
@@ -130,6 +183,7 @@ export default function Login() {
               subtitle="Plan meals, log how they went"
               accentColor="var(--coral)"
               hoverShadow="rgba(184,85,53,0.15)"
+              disabled={loading}
             />
             <RoleCard
               onClick={() => pickRole('clinician')}
@@ -139,6 +193,7 @@ export default function Login() {
               subtitle="View the board and track weekly patterns"
               accentColor="var(--mint)"
               hoverShadow="rgba(72,122,103,0.15)"
+              disabled={loading}
             />
           </div>
 
@@ -146,7 +201,7 @@ export default function Login() {
             textAlign: 'center', color: 'var(--text-light)',
             fontSize: 12, marginTop: 32, lineHeight: 1.6,
           }}>
-            Demo mode · No account required
+            {loading ? 'Signing in…' : 'Enter your credentials to continue'}
           </p>
         </div>
       </div>
@@ -154,10 +209,11 @@ export default function Login() {
   )
 }
 
-function RoleCard({ onClick, icon, iconBg, title, subtitle, accentColor, hoverShadow }) {
+function RoleCard({ onClick, icon, iconBg, title, subtitle, accentColor, hoverShadow, disabled }) {
   return (
     <button
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       onMouseEnter={e => {
         e.currentTarget.style.borderColor = accentColor
         e.currentTarget.style.boxShadow = `0 8px 28px ${hoverShadow}`
