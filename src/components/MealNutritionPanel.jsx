@@ -24,9 +24,15 @@ export default function MealNutritionPanel({ foods, mode = 'parent' }) {
         <span className="text-xs text-gray-400 italic">Estimated values</span>
       </div>
 
-      {mode === 'clinician' && (
-        <div className="text-xs text-gray-600 font-medium">{nutrition.calories} kcal total</div>
-      )}
+      <div className="flex items-center gap-2">
+        <span className="text-2xl font-bold text-gray-900">{nutrition.calories}</span>
+        <span className="text-sm text-gray-500">kcal</span>
+        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full font-medium ${
+          energyLevel === 'low' ? 'bg-blue-100 text-blue-700' :
+          energyLevel === 'moderate' ? 'bg-green-100 text-green-700' :
+          'bg-orange-100 text-orange-700'
+        }`}>{energyLevel === 'low' ? 'Light' : energyLevel === 'moderate' ? 'Balanced' : 'Energy-rich'}</span>
+      </div>
       <EnergyDensityBar level={energyLevel} />
 
       {flags.length > 0 && (

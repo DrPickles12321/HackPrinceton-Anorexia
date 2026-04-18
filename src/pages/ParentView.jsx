@@ -10,6 +10,7 @@ import WeeklyGrid from '../components/WeeklyGrid'
 import MealLogModal from '../components/MealLogModal'
 import FoodCardPreview from '../components/FoodCardPreview'
 import NotesPanel from '../components/NotesPanel'
+import WeeklyGoals from '../components/WeeklyGoals'
 
 export default function ParentView() {
   const [mealSlots, setMealSlots] = useState([])
@@ -160,7 +161,8 @@ export default function ParentView() {
         onSubmit={insertMealLog}
       />
 
-      <div className="mt-8">
+      <div className="mt-8 space-y-6">
+        <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="parent" />
         <NotesPanel
           notes={notes}
           mealSlots={mealSlots}

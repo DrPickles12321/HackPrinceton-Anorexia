@@ -1,6 +1,6 @@
 const FLAG_CONFIG = {
   'good calcium source':   { icon: '🦴', label: 'Bone health',    color: 'bg-purple-100 text-purple-700' },
-  'iron rich':             { icon: '💪', label: 'Strength',        color: 'bg-red-100 text-red-700' },
+  'iron rich':             { icon: '🩸', label: 'Iron rich',       color: 'bg-red-100 text-red-700' },
   'vitamin D source':      { icon: '☀️', label: 'Vitamin D',       color: 'bg-yellow-100 text-yellow-700' },
   'high energy density':   { icon: '⚡', label: 'Energy rich',     color: 'bg-orange-100 text-orange-700' },
   'complete protein':      { icon: '🥩', label: 'Protein',         color: 'bg-pink-100 text-pink-700' },
