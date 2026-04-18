@@ -151,6 +151,7 @@ export default function ParentView() {
         onClose={() => setLoggingSlot(null)}
         slot={loggingSlot}
         foodName={getFoodById(loggingSlot?.assigned_food_id)?.name || ''}
+        foodCategory={getFoodById(loggingSlot?.assigned_food_id)?.category || 'familiar'}
         onSubmit={insertMealLog}
       />
 

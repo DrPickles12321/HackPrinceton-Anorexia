@@ -7,6 +7,7 @@ import { useToast } from '../hooks/useToast'
 import WeeklyGrid from '../components/WeeklyGrid'
 import WeeklyInsights from '../components/WeeklyInsights'
 import NotesPanel from '../components/NotesPanel'
+import DailyNutritionSummary from '../components/nutrition/DailyNutritionSummary'
 
 export default function ClinicianView() {
   const [mealSlots, setMealSlots] = useState([])
@@ -15,6 +16,7 @@ export default function ClinicianView() {
   const [notes, setNotes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [selectedDay, setSelectedDay] = useState(null)
   const { setStatus } = useRealtimeStatus()
   const { showToast } = useToast()
 
@@ -135,7 +137,13 @@ export default function ClinicianView() {
 
       {!loading && !error && (
         <>
-          <WeeklyGrid mealSlots={mealSlots} foodItems={foodItems} mode="clinician" latestLogBySlot={latestLogBySlot} />
+          <WeeklyGrid
+            mealSlots={mealSlots}
+            foodItems={foodItems}
+            mode="clinician"
+            latestLogBySlot={latestLogBySlot}
+            onDayClick={day => setSelectedDay(day)}
+          />
           <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} />
           <NotesPanel
             notes={notes}
@@ -146,6 +154,15 @@ export default function ClinicianView() {
             onMarkRead={() => {}}
           />
         </>
+      )}
+
+      {selectedDay && (
+        <DailyNutritionSummary
+          day={selectedDay}
+          mealSlots={mealSlots}
+          foodItems={foodItems}
+          onClose={() => setSelectedDay(null)}
+        />
       )}
     </div>
   )

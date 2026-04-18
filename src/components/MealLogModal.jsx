@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import Modal from './Modal'
+import MealNutritionPanel from './MealNutritionPanel'
 
 const DAY_LABELS = {
   mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday',
@@ -12,7 +13,7 @@ const STATUS_CONFIG = {
   refused:   { emoji: '❌', label: 'Refused',   selected: 'bg-red-100 border-red-500 text-red-900' },
 }
 
-export default function MealLogModal({ isOpen, onClose, slot, foodName, onSubmit }) {
+export default function MealLogModal({ isOpen, onClose, slot, foodName, foodCategory, onSubmit }) {
   const [status, setStatus] = useState(null)
   const [note, setNote] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -50,7 +51,14 @@ export default function MealLogModal({ isOpen, onClose, slot, foodName, onSubmit
         </p>
       )}
 
-      <div className="flex gap-2 mb-4">
+      {foodName && (
+        <MealNutritionPanel
+          foods={[{ name: foodName, category: foodCategory || 'familiar' }]}
+          mode="parent"
+        />
+      )}
+
+      <div className="flex gap-2 mb-4 mt-4">
         {Object.entries(STATUS_CONFIG).map(([key, cfg]) => (
           <button
             key={key}

@@ -1,4 +1,38 @@
+import { lookupNutrition, computeAN_Flags } from './nutritionService'
+
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+export function computeNutritionInsights({ mealSlots, foodItems }) {
+  const filledSlots = mealSlots.filter(s => s.assigned_food_id)
+  if (filledSlots.length === 0) return { avgDailyCalories: null, topRecoveryNutrient: null }
+
+  const calsByDay = {}
+  const flagCounts = {}
+
+  for (const slot of filledSlots) {
+    const food = foodItems.find(f => f.id === slot.assigned_food_id)
+    if (!food) continue
+    const info = lookupNutrition(food.name, food.category)
+    calsByDay[slot.day] = (calsByDay[slot.day] || 0) + info.calories
+    for (const flag of computeAN_Flags(info)) {
+      flagCounts[flag] = (flagCounts[flag] || 0) + 1
+    }
+  }
+
+  const days = Object.values(calsByDay)
+  const avgDailyCalories = days.length > 0 ? Math.round(days.reduce((a, b) => a + b, 0) / days.length) : null
+
+  let topRecoveryNutrient = null
+  let maxCount = 0
+  for (const [flag, count] of Object.entries(flagCounts)) {
+    if (count > maxCount) {
+      maxCount = count
+      topRecoveryNutrient = { flag, count }
+    }
+  }
+
+  return { avgDailyCalories, topRecoveryNutrient }
+}
 
 export function computeInsights({ mealLogs, foodItems, mealSlots }) {
   const cutoff = Date.now() - ONE_WEEK_MS

@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
-import { computeInsights } from '../lib/insights'
+import { computeInsights, computeNutritionInsights } from '../lib/insights'
+import { FLAG_CONFIG } from './nutrition/FlagChip'
 
 const MEAL_LABELS = { breakfast: 'breakfasts', lunch: 'lunches', dinner: 'dinners', snack: 'snacks' }
 const CATEGORY_LABELS = { familiar: 'Familiar foods', working_on: 'Working-on foods', challenge: 'Challenge foods' }
@@ -27,6 +28,10 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots }) {
   const insights = useMemo(
     () => computeInsights({ mealLogs, foodItems, mealSlots }),
     [mealLogs, foodItems, mealSlots]
+  )
+  const nutritionInsights = useMemo(
+    () => computeNutritionInsights({ mealSlots, foodItems }),
+    [mealSlots, foodItems]
   )
 
   return (
@@ -78,6 +83,24 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots }) {
             }
             tone={insights.refused > 0 ? 'alert' : 'neutral'}
           />
+          {nutritionInsights.avgDailyCalories !== null && (
+            <StatCard
+              icon="⚡"
+              label="Avg daily energy"
+              value={`${nutritionInsights.avgDailyCalories} kcal`}
+              subtext="estimated from planned meals"
+              tone="neutral"
+            />
+          )}
+          {nutritionInsights.topRecoveryNutrient && (
+            <StatCard
+              icon={FLAG_CONFIG[nutritionInsights.topRecoveryNutrient.flag]?.icon || '🌟'}
+              label="Top recovery nutrient"
+              value={FLAG_CONFIG[nutritionInsights.topRecoveryNutrient.flag]?.label || nutritionInsights.topRecoveryNutrient.flag}
+              subtext={`present in ${nutritionInsights.topRecoveryNutrient.count} planned meal${nutritionInsights.topRecoveryNutrient.count !== 1 ? 's' : ''}`}
+              tone="good"
+            />
+          )}
         </div>
       )}
     </section>
