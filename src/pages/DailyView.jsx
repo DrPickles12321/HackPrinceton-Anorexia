@@ -34,9 +34,9 @@ const MEALS = [
 ]
 
 const STATUS_OPTIONS = [
-  { key: 'okay',      emoji: '😌', label: 'Ok',   color: 'var(--mint)',  bg: 'var(--mint-light)' },
-  { key: 'difficult', emoji: '😰', label: 'Hard', color: 'var(--peach)', bg: 'var(--peach-light)' },
-  { key: 'refused',   emoji: '🙅', label: 'No',   color: 'var(--pink)',  bg: 'var(--pink-light)' },
+  { key: 'okay',      emoji: '😌', label: 'Ok',   color: '#2d9e5f', bg: '#eaf7f0', border: '#a8ddc0' },
+  { key: 'difficult', emoji: '😰', label: 'Hard', color: '#c9860a', bg: '#fef8e7', border: '#f5d07a' },
+  { key: 'refused',   emoji: '🙅', label: 'No',   color: '#d63f3f', bg: '#fdeaea', border: '#f5a8a8' },
 ]
 
 const RING_NUTRIENTS = [
@@ -198,7 +198,7 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: meal.color, display: 'inline-block', flexShrink: 0 }} />
+          <span style={{ fontSize: 17 }}>{meal.icon}</span>
           <span style={{ fontWeight: 600, fontSize: 14, color: meal.color }}>{meal.label}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.88)', borderRadius: 10, padding: '5px 8px' }}>
@@ -249,18 +249,20 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
                 onClick={() => hasItems && onQuickLog(slot, opt.key)}
                 disabled={!hasItems}
                 style={{
-                  padding: '6px 14px', borderRadius: 20,
-                  border: `0.5px solid ${selected ? '#b08a8e' : '#d4a0a5'}`,
-                  background: selected ? '#e8c5c8' : '#faf8f6',
-                  color: '#3a3030',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                  padding: '7px 11px', borderRadius: 10,
+                  border: `1.5px solid ${selected ? opt.color : opt.border}`,
+                  background: selected ? opt.bg : 'white',
                   cursor: hasItems ? 'pointer' : 'default',
                   opacity: hasItems ? 1 : 0.38,
-                  transition: 'all 0.15s',
-                  fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12, fontWeight: 500,
+                  transition: 'all 0.15s', minWidth: 50,
+                  fontFamily: "'Outfit', sans-serif",
                 }}
               >
-                {opt.label}
+                <span style={{ fontSize: 18 }}>{opt.emoji}</span>
+                <span style={{ fontSize: 10, fontWeight: 500, color: selected ? opt.color : '#999' }}>
+                  {opt.label}
+                </span>
               </button>
             )
           })}
@@ -494,6 +496,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
   const [showAll, setShowAll] = useState(false)
   const [expandedNoteId, setExpandedNoteId] = useState(null)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [hiddenNoteIds, setHiddenNoteIds] = useState([])
 
   useEffect(() => {
     if (savedClinicianNotes.length === 0) { setShowSaved(false); setConfirmClear(false) }
@@ -687,7 +690,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
         </div>
 
         {/* All Notes section */}
-        {olderNotes.length > 0 && (
+        {olderNotes.filter(n => !hiddenNoteIds.includes(n.id)).length > 0 && (
           <div style={{ borderTop: '1px solid var(--border)' }}>
             <button
               onClick={() => setShowAll(s => !s)}
@@ -697,12 +700,12 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                 cursor: 'pointer', fontFamily: "'Lato', sans-serif",
               }}
             >
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-mid)' }}>History ({olderNotes.length})</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-mid)' }}>History ({olderNotes.filter(n => !hiddenNoteIds.includes(n.id)).length})</span>
               <span style={{ fontSize: 10, color: 'var(--text-light)' }}>{showAll ? '▲' : '▼'}</span>
             </button>
             {showAll && (
               <div style={{ borderTop: '1px solid var(--border)' }}>
-                {olderNotes.map(note => {
+                {olderNotes.filter(n => !hiddenNoteIds.includes(n.id)).map(note => {
                   const isExpanded = expandedNoteId === note.id
                   const preview = note.body?.length > 50 ? note.body.slice(0, 50) + '…' : note.body
                   return (
@@ -710,10 +713,20 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                       key={note.id}
                       onClick={() => setExpandedNoteId(isExpanded ? null : note.id)}
                       style={{
-                        padding: '8px 12px', borderBottom: '1px solid var(--border)',
+                        position: 'relative', padding: '8px 28px 8px 12px',
+                        borderBottom: '1px solid var(--border)',
                         cursor: 'pointer', background: isExpanded ? 'var(--surface-warm)' : 'white',
                       }}
                     >
+                      <button
+                        onClick={e => { e.stopPropagation(); setHiddenNoteIds(prev => [...prev, note.id]) }}
+                        style={{
+                          position: 'absolute', top: 6, right: 8,
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          color: 'var(--text-light)', fontSize: 14, lineHeight: 1, padding: 0,
+                          fontFamily: 'inherit',
+                        }}
+                      >×</button>
                       <div style={{ fontSize: 9, color: 'var(--text-light)', marginBottom: 3 }}>
                         {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
@@ -989,9 +1002,9 @@ export default function DailyView() {
               letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: 9,
             }}>This Week</div>
             {[
-              { label: 'Okay',      count: weeklyStatusCounts.okay,      color: 'var(--mint)',  bg: 'var(--mint-light)',  border: 'var(--mint-mid)' },
-              { label: 'Difficult', count: weeklyStatusCounts.difficult, color: 'var(--peach)', bg: 'var(--peach-light)', border: 'var(--peach-mid)' },
-              { label: 'Refused',   count: weeklyStatusCounts.refused,   color: 'var(--pink)',  bg: 'var(--pink-light)',  border: 'var(--pink-mid)' },
+              { label: 'Okay',      count: weeklyStatusCounts.okay,      color: '#2d9e5f', bg: '#eaf7f0', border: '#a8ddc0' },
+              { label: 'Difficult', count: weeklyStatusCounts.difficult, color: '#c9860a', bg: '#fef8e7', border: '#f5d07a' },
+              { label: 'Refused',   count: weeklyStatusCounts.refused,   color: '#d63f3f', bg: '#fdeaea', border: '#f5a8a8' },
             ].map(s => (
               <div key={s.label} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
