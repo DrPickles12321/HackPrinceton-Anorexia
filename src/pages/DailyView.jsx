@@ -557,7 +557,7 @@ export default function DailyView() {
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveDrag(null)}
     >
-      <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', minHeight: 0, overflow: 'hidden', maxWidth: 1280, margin: '0 auto', width: '100%' }}>
 
         {/* Left sidebar */}
         <aside style={{

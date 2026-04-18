@@ -343,23 +343,6 @@ export default function WeeklyView() {
           ))}
       </div>
 
-      {/* Fixed side stat — right edge, vertically centered */}
-      {totalLogged > 0 && (
-        <div style={{
-          position: 'fixed', right: 0, top: '50%',
-          transform: 'translateY(-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center',
-          padding: '18px 10px', gap: 4, pointerEvents: 'none',
-        }}>
-          <div style={{ fontSize: 28, fontWeight: 700, color: '#E8735A', lineHeight: 1 }}>{pct}%</div>
-          <div style={{
-            fontSize: 10, color: 'var(--text-light)', fontWeight: 600,
-            textTransform: 'uppercase', letterSpacing: '0.8px',
-            writingMode: 'vertical-rl', transform: 'rotate(180deg)',
-            marginTop: 4,
-          }}>okay meals</div>
-        </div>
-      )}
 
       {/* Day popover — fixed, viewport-safe, closes on outside click */}
       {openDay && openDayObj && (

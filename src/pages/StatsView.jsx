@@ -310,12 +310,13 @@ export default function StatsView() {
         </div>
 
         {/* Summary stat pills */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
           {[
-            { label: 'Total Logged', value: stats.total,     color: 'var(--text-dark)', bg: 'white',              border: 'var(--border)',    shadow: 'rgba(39,23,6,0.05)' },
-            { label: 'Okay',         value: stats.okay,      color: 'var(--mint)',       bg: 'var(--mint-light)',  border: 'var(--mint-mid)',  shadow: 'rgba(72,122,103,0.08)' },
-            { label: 'Difficult',    value: stats.difficult, color: 'var(--peach)',      bg: 'var(--peach-light)', border: 'var(--peach-mid)', shadow: 'rgba(176,120,40,0.08)' },
-            { label: 'Refused',      value: stats.refused,   color: 'var(--pink)',       bg: 'var(--pink-light)',  border: 'var(--pink-mid)',  shadow: 'rgba(174,76,106,0.08)' },
+            { label: 'Okay Meals',   value: `${stats.successRate}%`, color: '#E8735A',          bg: '#FDF1EE',            border: '#F5C4B4',          shadow: 'rgba(232,115,90,0.10)' },
+            { label: 'Total Logged', value: stats.total,              color: 'var(--text-dark)', bg: 'white',              border: 'var(--border)',    shadow: 'rgba(39,23,6,0.05)' },
+            { label: 'Okay',         value: stats.okay,               color: 'var(--mint)',      bg: 'var(--mint-light)',  border: 'var(--mint-mid)',  shadow: 'rgba(72,122,103,0.08)' },
+            { label: 'Difficult',    value: stats.difficult,          color: 'var(--peach)',     bg: 'var(--peach-light)', border: 'var(--peach-mid)', shadow: 'rgba(176,120,40,0.08)' },
+            { label: 'Refused',      value: stats.refused,            color: 'var(--pink)',      bg: 'var(--pink-light)',  border: 'var(--pink-mid)',  shadow: 'rgba(174,76,106,0.08)' },
           ].map(s => (
             <div key={s.label} style={{
               background: s.bg, borderRadius: 18, padding: '20px',
