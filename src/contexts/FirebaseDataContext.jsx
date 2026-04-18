@@ -202,7 +202,7 @@ export function FirebaseDataProvider({ children }) {
   const activeFbMealData       = viewingPatientUid ? patientFbMealData : fbMealData
   const nutritionalTargets     = viewingPatientUid ? patientNutritionalTargets : ownNutritionalTargets
   const allMealItems           = deriveMealItems(activeFbMealData)
-  const mealStatuses           = deriveMealStatuses(fbMealData)   // always own (parent statuses)
+  const mealStatuses           = deriveMealStatuses(activeFbMealData)
   const parentNotesArray       = Object.values(parentNotesByDate)
   const prescribedSupplements  = viewingPatientUid ? patientPrescribedSupplements : ownPrescribedSupplements
 
@@ -282,13 +282,13 @@ export function FirebaseDataProvider({ children }) {
     const readAt = new Date().toISOString()
     const noteDate = note.created_at?.slice(0, 10)
     update(ref(db), {
-      [`users/${uid}/clinicianNotesRead/${note.id}`]: { readAt, noteCreatedAt: note.created_at },
-      [`users/${uid}/clinicianNotesRead/date:${noteDate}`]: { noteId: note.id, readAt, noteCreatedAt: note.created_at },
+      [`users/${uid}/clinicianNotesRead/${note.id}`]: { readAt, noteCreatedAt: note.created_at, noteBody: note.body },
+      [`users/${uid}/clinicianNotesRead/date:${noteDate}`]: { noteId: note.id, readAt, noteCreatedAt: note.created_at, noteBody: note.body },
     })
     setClinicianNotesRead(prev => ({
       ...prev,
-      [note.id]: { readAt, noteCreatedAt: note.created_at },
-      ['date:' + noteDate]: { noteId: note.id, readAt, noteCreatedAt: note.created_at },
+      [note.id]: { readAt, noteCreatedAt: note.created_at, noteBody: note.body },
+      ['date:' + noteDate]: { noteId: note.id, readAt, noteCreatedAt: note.created_at, noteBody: note.body },
     }))
   }
 

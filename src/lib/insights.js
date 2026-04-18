@@ -122,7 +122,7 @@ export function computeNutritionInsights({ mealSlots, foodItems }) {
   return { avgDailyCalories, topRecoveryNutrient }
 }
 
-export function computeInsightsFromMealItems(allMealItems) {
+export function computeInsightsFromMealItems(allMealItems, mealStatuses = {}) {
   const cutoff = Date.now() - ONE_WEEK_MS
   const MEAL_TYPES = ['breakfast', 'lunch', 'dinner', 'snack']
 
@@ -135,19 +135,27 @@ export function computeInsightsFromMealItems(allMealItems) {
   }
 
   let totalLogs = 0
-  const countByMealType = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
-  const categoryCount = { familiar: 0, working_on: 0, challenge: 0 }
+  let okay = 0, difficult = 0, refused = 0
+  const hardCountByMealType = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
+  const refusedByCategory = { familiar: 0, working_on: 0, challenge: 0 }
 
   for (const date of recentDates) {
     const dayMeals = allMealItems[date] || {}
+    const dayStatuses = mealStatuses[date] || {}
     for (const mealType of MEAL_TYPES) {
       const items = dayMeals[mealType] || []
       if (items.length > 0) {
         totalLogs++
-        countByMealType[mealType]++
-        for (const item of items) {
-          const cat = item.category || 'working_on'
-          if (cat in categoryCount) categoryCount[cat]++
+        const status = dayStatuses[mealType] || 'okay'
+        if (status === 'okay') okay++
+        else if (status === 'difficult') { difficult++; hardCountByMealType[mealType]++ }
+        else if (status === 'refused') {
+          refused++
+          hardCountByMealType[mealType]++
+          for (const item of items) {
+            const cat = item.category || 'working_on'
+            if (cat in refusedByCategory) refusedByCategory[cat]++
+          }
         }
       }
     }
@@ -157,19 +165,15 @@ export function computeInsightsFromMealItems(allMealItems) {
     return { totalLogs: 0, okay: 0, difficult: 0, refused: 0, hardestMealType: null, topRefusedCategory: null }
   }
 
-  const okay = totalLogs
-  const difficult = 0
-  const refused = 0
-
   let hardestMealType = null
-  let maxCount = 0
-  for (const [mealType, count] of Object.entries(countByMealType)) {
-    if (count > maxCount) { maxCount = count; hardestMealType = { mealType, count } }
+  let maxHard = 0
+  for (const [mealType, count] of Object.entries(hardCountByMealType)) {
+    if (count > maxHard) { maxHard = count; hardestMealType = { mealType, count } }
   }
 
   let topRefusedCategory = null
   let maxCat = 0
-  for (const [category, count] of Object.entries(categoryCount)) {
+  for (const [category, count] of Object.entries(refusedByCategory)) {
     if (count > maxCat) { maxCat = count; topRefusedCategory = { category, count } }
   }
 

@@ -105,6 +105,7 @@ export default function ClinicianView() {
   const {
     parentNotesArray: parentNotes,
     allMealItems: parentMealItems,
+    mealStatuses: parentMealStatuses,
     clinicianNotesRead,
     markParentNoteReadById,
     patients,
@@ -392,7 +393,7 @@ export default function ClinicianView() {
             onMarkNoteRead={handleMarkNoteRead}
             parentMealItems={parentMealItems}
           />
-          <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} allMealItems={parentMealItems} />
+          <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} allMealItems={parentMealItems} mealStatuses={parentMealStatuses} />
           <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" allMealItems={parentMealItems} />
           {viewingPatientUid && (
             <ClinicianSupplementEditor

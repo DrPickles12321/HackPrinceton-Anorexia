@@ -24,7 +24,7 @@ function StatCard({ icon, label, value, subtext, tone = 'neutral' }) {
   )
 }
 
-export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMealItems }) {
+export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMealItems, mealStatuses }) {
   const hasAnyLoggedFood = allMealItems && Object.values(allMealItems).some(
     dayMeals => Object.values(dayMeals).some(
       items => Array.isArray(items) && items.length > 0
@@ -34,7 +34,7 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMeal
   const insights = useMemo(() => {
     if (allMealItems !== undefined) {
       return hasAnyLoggedFood
-        ? computeInsightsFromMealItems(allMealItems)
+        ? computeInsightsFromMealItems(allMealItems, mealStatuses)
         : { totalLogs: 0, okay: 0, difficult: 0, refused: 0, hardestMealType: null, topRefusedCategory: null }
     }
     return computeInsights({ mealLogs, foodItems, mealSlots })
