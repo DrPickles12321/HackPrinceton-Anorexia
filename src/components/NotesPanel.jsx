@@ -5,7 +5,7 @@ const DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri',
 
 function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1) }
 
-export default function NotesPanel({ notes, mealSlots, foodItems, mode, onSend, onMarkRead }) {
+export default function NotesPanel({ notes, mealSlots, foodItems, mode, onSend, onMarkRead, onDelete }) {
   function getSlotLabel(slotId) {
     if (!slotId) return null
     const slot = mealSlots.find(s => s.id === slotId)
@@ -49,6 +49,7 @@ export default function NotesPanel({ notes, mealSlots, foodItems, mode, onSend, 
                 slotLabel={getSlotLabel(note.slot_id)}
                 showMarkRead={mode === 'parent'}
                 onMarkRead={onMarkRead}
+                onDelete={onDelete}
               />
             </div>
           ))

@@ -111,6 +111,11 @@ export default function ParentView() {
     await supabase.from('clinician_notes').update({ is_read: true }).eq('id', noteId)
   }
 
+  async function handleDeleteNote(noteId) {
+    setNotes(c => c.filter(n => n.id !== noteId))
+    await supabase.from('clinician_notes').delete().eq('id', noteId)
+  }
+
   function getFoodById(foodId) {
     return foodItems.find(f => f.id === foodId) || null
   }
@@ -163,6 +168,7 @@ export default function ParentView() {
           mode="parent"
           onSend={() => {}}
           onMarkRead={handleMarkRead}
+          onDelete={handleDeleteNote}
         />
       </div>
 

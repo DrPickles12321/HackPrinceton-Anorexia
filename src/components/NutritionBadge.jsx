@@ -18,7 +18,7 @@ export default function NutritionBadge({ foodName, category, mode = 'parent' }) 
     return (
       <div className="flex flex-wrap gap-1 mt-1">
         <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${ENERGY_COLOR[level]}`}>
-          {ENERGY_LABEL[level]}
+          {info.calories} kcal · {ENERGY_LABEL[level]}
         </span>
         {flags.slice(0, 2).map(flag => {
           const cfg = FLAG_CONFIG[flag]

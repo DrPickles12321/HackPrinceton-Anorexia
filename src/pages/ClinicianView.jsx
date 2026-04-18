@@ -98,6 +98,11 @@ export default function ClinicianView() {
     onDelete: row => setNotes(c => c.filter(n => n.id !== row.id)),
   })
 
+  async function handleDeleteNote(noteId) {
+    setNotes(c => c.filter(n => n.id !== noteId))
+    await supabase.from('clinician_notes').delete().eq('id', noteId)
+  }
+
   async function handleSendNote({ body, slotId }) {
     const { data, error } = await supabase
       .from('clinician_notes')
@@ -152,6 +157,7 @@ export default function ClinicianView() {
             mode="clinician"
             onSend={handleSendNote}
             onMarkRead={() => {}}
+            onDelete={handleDeleteNote}
           />
         </>
       )}
