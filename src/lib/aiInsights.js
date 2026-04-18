@@ -1,11 +1,14 @@
 import { lookupNutrition } from './nutritionService'
 
 async function callClaude(prompt) {
+  const key = import.meta.env.VITE_ANTHROPIC_API_KEY
+  if (!key) throw new Error('VITE_ANTHROPIC_API_KEY is not set in .env — restart the dev server after adding it')
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
+      'x-api-key': key,
       'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      'anthropic-dangerous-direct-browser-access': 'true', // required for direct browser calls; use a backend proxy in production
       'content-type': 'application/json',
     },
     body: JSON.stringify({
