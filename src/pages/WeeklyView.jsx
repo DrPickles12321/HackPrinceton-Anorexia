@@ -226,23 +226,14 @@ export default function WeeklyView() {
   const openDayObj = DAYS.find(d => d.key === openDay)
 
   return (
-    <div style={{ flex: 1, padding: '28px 48px', overflowY: 'auto' }}>
-      <div style={{ maxWidth: '100%' }}>
+    <div style={{ flex: 1, padding: '28px 20px', overflowY: 'auto' }}>
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 26 }}>
-          <div>
-            <h2 className="font-lora" style={{ fontSize: 26, fontWeight: 400, color: 'var(--text-dark)', marginBottom: 5, lineHeight: 1.15 }}>
-              This Week at a Glance
-            </h2>
-            <p style={{ fontSize: 14, color: 'var(--text-mid)' }}>Click a day header for the daily nutrition summary</p>
-          </div>
-          {totalLogged > 0 && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 32, fontWeight: 700, color: '#E8735A', lineHeight: 1 }}>{pct}%</div>
-              <div style={{ fontSize: 12, color: 'var(--text-light)', marginTop: 3, fontWeight: 500 }}>okay meals</div>
-            </div>
-          )}
+        <div style={{ marginBottom: 20 }}>
+          <h2 className="font-lora" style={{ fontSize: 26, fontWeight: 400, color: 'var(--text-dark)', marginBottom: 5, lineHeight: 1.15 }}>
+            This Week at a Glance
+          </h2>
+          <p style={{ fontSize: 14, color: 'var(--text-mid)' }}>Click a day header for the daily nutrition summary</p>
         </div>
 
         {/* Legend */}
@@ -335,7 +326,7 @@ export default function WeeklyView() {
                     style={{
                       background: s.bg,
                       borderLeft: '1px solid var(--border)',
-                      minHeight: 70,
+                      minHeight: 90,
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       ...(log?.status === 'empty' || !log ? { border: '1.5px dashed transparent' } : {}),
                     }}
@@ -350,8 +341,25 @@ export default function WeeklyView() {
               })}
             </div>
           ))}
-        </div>
       </div>
+
+      {/* Fixed side stat — right edge, vertically centered */}
+      {totalLogged > 0 && (
+        <div style={{
+          position: 'fixed', right: 0, top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          padding: '18px 10px', gap: 4, pointerEvents: 'none',
+        }}>
+          <div style={{ fontSize: 28, fontWeight: 700, color: '#E8735A', lineHeight: 1 }}>{pct}%</div>
+          <div style={{
+            fontSize: 10, color: 'var(--text-light)', fontWeight: 600,
+            textTransform: 'uppercase', letterSpacing: '0.8px',
+            writingMode: 'vertical-rl', transform: 'rotate(180deg)',
+            marginTop: 4,
+          }}>okay meals</div>
+        </div>
+      )}
 
       {/* Day popover — fixed, viewport-safe, closes on outside click */}
       {openDay && openDayObj && (
