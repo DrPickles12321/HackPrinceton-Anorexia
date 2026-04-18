@@ -509,7 +509,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
   const noteDate = latest?.created_at?.slice(0, 10)
   const directRead = latest ? clinicianNotesRead[latest.id] : null
   const dateKeyRead = noteDate ? clinicianNotesRead['date:' + noteDate] : null
-  const readBodyMatches = directRead && directRead.noteBody === latest?.body
+  const readBodyMatches = !!directRead && directRead.noteBody !== undefined && directRead.noteBody === latest?.body
   const isRead = readBodyMatches
   const isUpdated = (!!directRead && !readBodyMatches) || (!directRead && !!dateKeyRead)
   const isSaved = latest ? savedClinicianNotes.some(n => n.id === latest.id) : false

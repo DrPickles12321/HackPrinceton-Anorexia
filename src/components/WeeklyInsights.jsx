@@ -79,13 +79,13 @@ export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMeal
           <StatCard
             icon="😓"
             label="Difficult"
-            value={insights.difficult + insights.refused}
+            value={insights.difficult}
             subtext={
               insights.hardestMealType
                 ? `Most often at ${MEAL_LABELS[insights.hardestMealType.mealType]} (${insights.hardestMealType.count})`
                 : 'None this week'
             }
-            tone={insights.difficult + insights.refused > 0 ? 'warn' : 'neutral'}
+            tone={insights.difficult > 0 ? 'warn' : 'neutral'}
           />
           <StatCard
             icon="🎯"

@@ -81,6 +81,7 @@ export function FirebaseDataProvider({ children }) {
   const [patientNutritionalTargets, setPatientNutritionalTargets] = useState(null)
   const [ownPrescribedSupplements, setOwnPrescribedSupplements]       = useState([])
   const [patientPrescribedSupplements, setPatientPrescribedSupplements] = useState([])
+  const [patientParentNotesByDate, setPatientParentNotesByDate] = useState({})
 
   // ── Subscribe to own data ──────────────────────────────────────────────────
   useEffect(() => {
@@ -181,6 +182,7 @@ export function FirebaseDataProvider({ children }) {
       setPatientFbMealData({})
       setPatientNutritionalTargets(null)
       setPatientPrescribedSupplements([])
+      setPatientParentNotesByDate({})
       return
     }
     const unsubs = []
@@ -195,6 +197,9 @@ export function FirebaseDataProvider({ children }) {
       const val = snap.val()
       setPatientPrescribedSupplements(Array.isArray(val) ? val : [])
     }))
+    unsubs.push(onValue(ref(db, `users/${viewingPatientUid}/parentNotes`), snap => {
+      setPatientParentNotesByDate(snap.val() || {})
+    }))
     return () => unsubs.forEach(u => u())
   }, [viewingPatientUid])
 
@@ -203,7 +208,8 @@ export function FirebaseDataProvider({ children }) {
   const nutritionalTargets     = viewingPatientUid ? patientNutritionalTargets : ownNutritionalTargets
   const allMealItems           = deriveMealItems(activeFbMealData)
   const mealStatuses           = deriveMealStatuses(activeFbMealData)
-  const parentNotesArray       = Object.values(parentNotesByDate)
+  const activeParentNotesByDate = viewingPatientUid ? patientParentNotesByDate : parentNotesByDate
+  const parentNotesArray       = Object.values(activeParentNotesByDate)
   const prescribedSupplements  = viewingPatientUid ? patientPrescribedSupplements : ownPrescribedSupplements
 
   // ── Write functions ────────────────────────────────────────────────────────
@@ -258,6 +264,15 @@ export function FirebaseDataProvider({ children }) {
     const note = { ...parentNotesByDate[date], read_at: new Date().toISOString() }
     set(ref(db, `users/${uid}/parentNotes/${date}`), note)
     setParentNotesByDate(prev => ({ ...prev, [date]: note }))
+  }
+
+  function markPatientParentNoteReadById(noteId) {
+    if (!viewingPatientUid) return
+    const date = Object.keys(patientParentNotesByDate).find(d => patientParentNotesByDate[d]?.id === noteId)
+    if (!date) return
+    const note = { ...patientParentNotesByDate[date], read_at: new Date().toISOString() }
+    set(ref(db, `users/${viewingPatientUid}/parentNotes/${date}`), note)
+    setPatientParentNotesByDate(prev => ({ ...prev, [date]: note }))
   }
 
   function updateMealTime(mealType, value) {
@@ -343,6 +358,7 @@ export function FirebaseDataProvider({ children }) {
       parentNotesArray,
       saveParentNote,
       markParentNoteReadById,
+      markPatientParentNoteReadById,
       mealTimes,
       updateMealTime,
       supplementLog,

@@ -108,6 +108,7 @@ export default function ClinicianView() {
     mealStatuses: parentMealStatuses,
     clinicianNotesRead,
     markParentNoteReadById,
+    markPatientParentNoteReadById,
     patients,
     viewingPatientUid,
     setViewingPatientUid,
@@ -222,7 +223,7 @@ export default function ClinicianView() {
   })
 
   function handleMarkNoteRead(noteId) {
-    markParentNoteReadById(noteId)
+    markPatientParentNoteReadById(noteId)
   }
 
   async function handleDeleteNote(noteId) {
@@ -394,6 +395,7 @@ export default function ClinicianView() {
             parentMealItems={parentMealItems}
           />
           <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} allMealItems={parentMealItems} mealStatuses={parentMealStatuses} />
+          <ParentNotesPanel notes={parentNotes} onMarkRead={handleMarkNoteRead} />
           <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" allMealItems={parentMealItems} />
           {viewingPatientUid && (
             <ClinicianSupplementEditor
@@ -462,6 +464,72 @@ export default function ClinicianView() {
           loggedMealItems={parentMealItems[selectedDay.date] || {}}
           onClose={() => setSelectedDay(null)}
         />
+      )}
+    </div>
+  )
+}
+
+function ParentNotesPanel({ notes = [], onMarkRead }) {
+  const sorted = [...notes].sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+  const unreadCount = sorted.filter(n => !n.read_at).length
+
+  return (
+    <div style={{
+      background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb',
+      padding: '20px 24px', marginTop: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', margin: 0 }}>Parent Notes</h2>
+        {unreadCount > 0 && (
+          <span style={{
+            background: '#fef3c7', color: '#d97706', fontSize: 11, fontWeight: 700,
+            borderRadius: 20, padding: '2px 8px', border: '1px solid #fde68a',
+          }}>
+            {unreadCount} unread
+          </span>
+        )}
+      </div>
+
+      {sorted.length === 0 ? (
+        <p style={{ fontSize: 13, color: '#9ca3af', fontStyle: 'italic' }}>No notes from the parent yet.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {sorted.map(note => {
+            const isUnread = !note.read_at
+            return (
+              <div key={note.date} style={{
+                background: isUnread ? '#fffbeb' : '#f9fafb',
+                border: `1.5px solid ${isUnread ? '#fde68a' : '#e5e7eb'}`,
+                borderRadius: 12, padding: '12px 14px',
+                display: 'flex', gap: 12, alignItems: 'flex-start',
+              }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280' }}>
+                      {new Date(note.date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    </span>
+                    {isUnread && (
+                      <span style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>● New</span>
+                    )}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 13, color: '#374151', lineHeight: 1.5 }}>{note.body}</p>
+                </div>
+                {isUnread ? (
+                  <button
+                    onClick={() => onMarkRead?.(note.id)}
+                    style={{
+                      flexShrink: 0, fontSize: 11, fontWeight: 600, color: '#d97706',
+                      background: 'none', border: '1px solid #fde68a', borderRadius: 8,
+                      padding: '4px 10px', cursor: 'pointer', fontFamily: "'Lato', sans-serif",
+                    }}
+                  >Mark read</button>
+                ) : (
+                  <span style={{ fontSize: 10, color: '#10b981', fontWeight: 600, flexShrink: 0 }}>✓ Read</span>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
