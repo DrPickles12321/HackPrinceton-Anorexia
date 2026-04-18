@@ -134,7 +134,7 @@ export default function ParentView() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6">
+    <div style={{ width: '100%', padding: '16px 24px' }}>
       <Outlet context={{ mealSlots, foodItems, mealLogs, clinicianNotes, parentNotes, clinicianNotesRead, mealStatuses, updateMealSlot, insertMealLog, saveParentNote, markClinicianNoteRead, setMealStatus }} />
     </div>
   )

@@ -226,7 +226,7 @@ export default function WeeklyView() {
   const openDayObj = DAYS.find(d => d.key === openDay)
 
   return (
-    <div style={{ flex: 1, padding: '28px 20px', overflowY: 'auto' }}>
+    <div style={{ flex: 1, padding: '28px 32px', overflowY: 'auto', margin: '0 -24px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 20 }}>
