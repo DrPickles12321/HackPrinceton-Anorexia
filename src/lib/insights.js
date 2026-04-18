@@ -1,4 +1,4 @@
-import { lookupNutrition, computeAN_Flags } from './nutritionService'
+import { lookupNutrition } from './nutritionService'
 
 const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
@@ -14,7 +14,7 @@ export function computeNutritionInsights({ mealSlots, foodItems }) {
     if (!food) continue
     const info = lookupNutrition(food.name, food.category)
     calsByDay[slot.day] = (calsByDay[slot.day] || 0) + info.calories
-    for (const flag of computeAN_Flags(info)) {
+    for (const flag of (info.an_relevant_flags || [])) {
       flagCounts[flag] = (flagCounts[flag] || 0) + 1
     }
   }

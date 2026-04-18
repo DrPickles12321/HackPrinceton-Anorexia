@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { lookupMealNutrition, aggregateMealNutrition, computeAN_Flags } from '../../lib/nutritionService'
+import { lookupMealNutrition, aggregateMealNutrition, lookupNutrition, energyDensityLabel } from '../../lib/nutritionService'
 import MacroBreakdown from './MacroBreakdown'
 import MicroBreakdown from './MicroBreakdown'
 import PlateVisual from './PlateVisual'
@@ -21,23 +21,18 @@ export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClo
       if (!slot) return null
       const food = foodItems.find(f => f.id === slot.assigned_food_id)
       if (!food) return null
-      const infos = lookupMealNutrition([food])
-      const agg = aggregateMealNutrition(infos)
-      const flags = computeAN_Flags(agg)
-      return { mealType, food, agg, flags }
+      const info = lookupNutrition(food.name, food.category)
+      return { mealType, food, info }
     }).filter(Boolean)
   }, [daySlots, foodItems])
 
   const dayTotal = useMemo(() => {
     if (mealData.length === 0) return null
-    return aggregateMealNutrition(mealData.map(m => m.agg))
+    return aggregateMealNutrition(mealData.map(m => m.info))
   }, [mealData])
-
-  const dayFlags = useMemo(() => dayTotal ? computeAN_Flags(dayTotal) : [], [dayTotal])
 
   return (
     <div className="fixed inset-y-0 right-0 w-96 bg-white shadow-2xl z-40 flex flex-col overflow-hidden border-l border-gray-200">
-      {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-indigo-50">
         <div>
           <h2 className="text-base font-bold text-gray-900">{DAY_LABEL[day]}</h2>
@@ -59,16 +54,15 @@ export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClo
           <div className="text-center py-12 text-gray-400 text-sm">No meals planned for {DAY_LABEL[day]}.</div>
         ) : (
           <>
-            {/* Day total */}
             {dayTotal && (
               <div className="bg-indigo-50 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold text-indigo-900">Day Total</span>
                   <span className="text-lg font-bold text-indigo-700">{dayTotal.calories} kcal</span>
                 </div>
-                {dayFlags.length > 0 && (
+                {dayTotal.an_relevant_flags.length > 0 && (
                   <div className="flex flex-wrap gap-1">
-                    {dayFlags.map(flag => <FlagChip key={flag} flag={flag} />)}
+                    {dayTotal.an_relevant_flags.map(flag => <FlagChip key={flag} flag={flag} />)}
                   </div>
                 )}
                 <PlateVisual plateBalance={dayTotal.plateBalance} />
@@ -79,7 +73,6 @@ export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClo
               </div>
             )}
 
-            {/* Micronutrients daily total */}
             {dayTotal && (
               <div className="bg-white border border-gray-200 rounded-xl p-4">
                 <div className="text-xs font-semibold text-gray-700 mb-3">Micronutrients (day total)</div>
@@ -87,19 +80,18 @@ export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClo
               </div>
             )}
 
-            {/* Per-meal breakdown */}
             <div className="space-y-3">
               <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Per Meal</div>
-              {mealData.map(({ mealType, food, agg, flags }) => (
+              {mealData.map(({ mealType, food, info }) => (
                 <div key={mealType} className="bg-gray-50 rounded-lg p-3">
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-gray-700">{MEAL_LABEL[mealType]}</span>
-                    <span className="text-xs text-gray-500">{agg.calories} kcal</span>
+                    <span className="text-xs text-gray-500">{info.calories} kcal</span>
                   </div>
                   <div className="text-sm text-gray-800 mb-2">{food.name}</div>
-                  {flags.length > 0 && (
+                  {info.an_relevant_flags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                      {flags.map(flag => <FlagChip key={flag} flag={flag} />)}
+                      {info.an_relevant_flags.map(flag => <FlagChip key={flag} flag={flag} />)}
                     </div>
                   )}
                 </div>

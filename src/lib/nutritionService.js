@@ -6,15 +6,13 @@ const FALLBACKS = {
   challenge:  { calories: 450, protein_g: 12, carbs_g: 48, fat_g: 22, fiber_g: 2, calcium_mg: 80,  iron_mg: 1.5, vitamin_d_mcg: 0.1 },
 }
 
-function energyDensityLabel(calories) {
+export function energyDensityLabel(calories) {
   if (calories < 200) return 'low'
   if (calories <= 400) return 'moderate'
   return 'high'
 }
 
-function plateZoneFromFallback() { return 'mixed' }
-
-function computeAN_Flags(info) {
+export function computeAN_Flags(info) {
   const flags = []
   if (info.calcium_mg >= 200) flags.push('good calcium source')
   if (info.iron_mg >= 2) flags.push('iron rich')
@@ -26,38 +24,35 @@ function computeAN_Flags(info) {
   return flags
 }
 
+// Returns a flat object — no nested macros/micros
 function buildResult(raw, inputName, confidence) {
-  const flags = computeAN_Flags(raw)
-  return {
+  const result = {
     name: inputName,
     matchedName: raw.name,
     confidence,
-    calories: raw.calories,
     serving_description: raw.serving_description || '1 serving',
-    macros: {
-      protein_g: raw.protein_g,
-      carbs_g: raw.carbs_g,
-      fat_g: raw.fat_g,
-      fiber_g: raw.fiber_g,
-    },
-    micros: {
-      calcium_mg: raw.calcium_mg,
-      iron_mg: raw.iron_mg,
-      vitamin_d_mcg: raw.vitamin_d_mcg,
-    },
+    calories: raw.calories,
+    protein_g: raw.protein_g,
+    carbs_g: raw.carbs_g,
+    fat_g: raw.fat_g,
+    fiber_g: raw.fiber_g,
+    calcium_mg: raw.calcium_mg,
+    iron_mg: raw.iron_mg,
+    vitamin_d_mcg: raw.vitamin_d_mcg,
     energy_density: energyDensityLabel(raw.calories),
     plate_zone: raw.plate_zone || 'mixed',
-    an_relevant_flags: flags,
   }
+  result.an_relevant_flags = computeAN_Flags(result)
+  return result
 }
 
 export function lookupNutrition(foodName, category = 'working_on') {
-  if (!foodName || !foodName.trim()) {
+  if (!foodName || (typeof foodName === 'string' && !foodName.trim())) {
     const fb = FALLBACKS[category] || FALLBACKS.working_on
     return buildResult({ ...fb, name: foodName || '', serving_description: '1 serving', plate_zone: 'mixed' }, foodName || '', 'not_found')
   }
 
-  const lower = foodName.toLowerCase().trim()
+  const lower = (typeof foodName === 'string' ? foodName : String(foodName)).toLowerCase().trim()
 
   // 1. Exact match
   const exact = nutritionDb.find(f => f.name.toLowerCase() === lower)
@@ -87,29 +82,44 @@ export function lookupNutrition(foodName, category = 'working_on') {
   return buildResult({ ...fb, name: foodName, serving_description: '1 serving (estimated)', plate_zone: 'mixed' }, foodName, 'not_found')
 }
 
+// Accepts array of strings OR {name, category} objects
 export function lookupMealNutrition(foods) {
-  return foods.map(name => lookupNutrition(name))
+  return foods.map(f => {
+    if (typeof f === 'string') return lookupNutrition(f)
+    return lookupNutrition(f.name, f.category)
+  })
 }
 
+// Accepts array of flat lookupNutrition results; returns flat aggregate
 export function aggregateMealNutrition(nutritionInfos) {
-  if (!nutritionInfos.length) return {
-    totalCalories: 0, totalProtein_g: 0, totalCarbs_g: 0, totalFat_g: 0,
-    totalFiber_g: 0, totalCalcium_mg: 0, totalIron_mg: 0, totalVitaminD_mcg: 0,
+  if (!nutritionInfos || !nutritionInfos.length) return {
+    calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0,
+    calcium_mg: 0, iron_mg: 0, vitamin_d_mcg: 0,
     plateBalance: { grain_pct: 0, protein_pct: 0, produce_pct: 0, fat_pct: 0, dairy_pct: 0 },
-    an_flags: [],
+    an_relevant_flags: [],
   }
 
-  const totals = nutritionInfos.reduce((acc, n) => ({
-    totalCalories:    acc.totalCalories    + n.calories,
-    totalProtein_g:   acc.totalProtein_g   + n.macros.protein_g,
-    totalCarbs_g:     acc.totalCarbs_g     + n.macros.carbs_g,
-    totalFat_g:       acc.totalFat_g       + n.macros.fat_g,
-    totalFiber_g:     acc.totalFiber_g     + n.macros.fiber_g,
-    totalCalcium_mg:  acc.totalCalcium_mg  + n.micros.calcium_mg,
-    totalIron_mg:     acc.totalIron_mg     + n.micros.iron_mg,
-    totalVitaminD_mcg:acc.totalVitaminD_mcg+ n.micros.vitamin_d_mcg,
-  }), { totalCalories:0, totalProtein_g:0, totalCarbs_g:0, totalFat_g:0,
-        totalFiber_g:0, totalCalcium_mg:0, totalIron_mg:0, totalVitaminD_mcg:0 })
+  const sums = nutritionInfos.reduce((acc, n) => ({
+    calories:      acc.calories      + (n.calories || 0),
+    protein_g:     acc.protein_g     + (n.protein_g || 0),
+    carbs_g:       acc.carbs_g       + (n.carbs_g || 0),
+    fat_g:         acc.fat_g         + (n.fat_g || 0),
+    fiber_g:       acc.fiber_g       + (n.fiber_g || 0),
+    calcium_mg:    acc.calcium_mg    + (n.calcium_mg || 0),
+    iron_mg:       acc.iron_mg       + (n.iron_mg || 0),
+    vitamin_d_mcg: acc.vitamin_d_mcg + (n.vitamin_d_mcg || 0),
+  }), { calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, fiber_g: 0, calcium_mg: 0, iron_mg: 0, vitamin_d_mcg: 0 })
+
+  const rounded = {
+    calories:      Math.round(sums.calories),
+    protein_g:     Math.round(sums.protein_g),
+    carbs_g:       Math.round(sums.carbs_g),
+    fat_g:         Math.round(sums.fat_g),
+    fiber_g:       Math.round(sums.fiber_g),
+    calcium_mg:    Math.round(sums.calcium_mg),
+    iron_mg:       Math.round(sums.iron_mg * 10) / 10,
+    vitamin_d_mcg: Math.round(sums.vitamin_d_mcg * 10) / 10,
+  }
 
   // Plate zone percentages
   const zoneCounts = { grain: 0, protein: 0, produce: 0, fat: 0, dairy: 0, mixed: 0 }
@@ -121,21 +131,11 @@ export function aggregateMealNutrition(nutritionInfos) {
   const total = nutritionInfos.length
   const pct = z => Math.round((zoneCounts[z] / total) * 100)
 
-  const allFlags = [...new Set(nutritionInfos.flatMap(n => n.an_relevant_flags))]
+  const an_relevant_flags = [...new Set(nutritionInfos.flatMap(n => n.an_relevant_flags || []))]
 
   return {
-    ...totals,
-    totalCalories: Math.round(totals.totalCalories),
-    totalProtein_g: Math.round(totals.totalProtein_g),
-    totalCarbs_g: Math.round(totals.totalCarbs_g),
-    totalFat_g: Math.round(totals.totalFat_g),
-    totalFiber_g: Math.round(totals.totalFiber_g),
-    totalCalcium_mg: Math.round(totals.totalCalcium_mg),
-    totalIron_mg: Math.round(totals.totalIron_mg * 10) / 10,
-    totalVitaminD_mcg: Math.round(totals.totalVitaminD_mcg * 10) / 10,
+    ...rounded,
     plateBalance: { grain_pct: pct('grain'), protein_pct: pct('protein'), produce_pct: pct('produce'), fat_pct: pct('fat'), dairy_pct: pct('dairy') },
-    an_flags: allFlags,
+    an_relevant_flags,
   }
 }
-
-export { computeAN_Flags, energyDensityLabel }

@@ -120,7 +120,7 @@ export default function WeeklyGrid({ mealSlots, foodItems, mode = 'parent', onSl
       <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
         <div className="min-w-[720px]">
           {/* Sticky day header with dates */}
-          <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-2 mb-2 sticky top-[60px] bg-white z-10 pb-2">
+          <div className="grid grid-cols-[100px_repeat(7,1fr)] gap-2 mb-2 sticky top-0 bg-white z-10 pb-2">
             <div />
             {DAYS.map((day, i) => {
               const d = weekDates[i]
