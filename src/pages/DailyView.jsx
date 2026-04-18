@@ -504,10 +504,218 @@ function DailyProgressPanel({ mealItems }) {
   )
 }
 
+// ─── Clinician notes sidebar ──────────────────────────────────────────────────
+
+function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinicianNoteRead, savedClinicianNotes, saveClinicianNote, unsaveClinicianNote }) {
+  const [showSaved, setShowSaved] = useState(false)
+  const [showAll, setShowAll] = useState(false)
+  const [expandedNoteId, setExpandedNoteId] = useState(null)
+
+  const today = new Date().toISOString().slice(0, 10)
+  const todayNote = clinicianNotes.find(n => n.created_at?.slice(0, 10) === today)
+  const latest = todayNote || clinicianNotes[0] || null
+
+  const noteDate = latest?.created_at?.slice(0, 10)
+  const directRead = latest ? clinicianNotesRead[latest.id] : null
+  const dateKeyRead = noteDate ? clinicianNotesRead['date:' + noteDate] : null
+  const isRead = !!directRead
+  const isUpdated = !directRead && !!dateKeyRead
+  const isSaved = latest ? savedClinicianNotes.some(n => n.id === latest.id) : false
+
+  const olderNotes = clinicianNotes.filter(n => n.id !== latest?.id)
+
+  return (
+    <div style={{ marginBottom: 22, position: 'relative', paddingTop: 14 }}>
+      {/* Tape */}
+      <div style={{
+        position: 'absolute', top: 0, left: '50%',
+        transform: 'translateX(-50%) rotate(-1deg)',
+        background: '#e8dcc8', borderRadius: 4,
+        width: 64, height: 14,
+        zIndex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
+      }} />
+
+      <div style={{
+        background: 'white', border: '1px solid var(--border)',
+        borderRadius: 14, overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(39,23,6,0.06)',
+      }}>
+        <div style={{ padding: '10px 12px 6px' }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--coral)', fontFamily: "'Outfit', sans-serif" }}>
+            Clinician Notes
+          </span>
+        </div>
+
+        {/* Ruled area */}
+        <div style={{
+          backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e8e0d4 27px, #e8e0d4 28px)',
+          backgroundSize: '100% 28px', backgroundPositionY: '4px',
+          display: 'flex', minHeight: 84,
+        }}>
+          <div style={{ width: 2, background: '#f4b8b8', flexShrink: 0, marginLeft: 10, marginRight: 8 }} />
+          <div style={{ flex: 1, padding: '8px 10px 8px 0' }}>
+            {!latest ? (
+              <div style={{ display: 'flex', gap: 5, alignItems: 'flex-start' }}>
+                <span style={{ color: 'rgba(184,85,53,0.3)', fontSize: 14, lineHeight: '28px' }}>○</span>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--text-light)', fontStyle: 'italic', lineHeight: '28px' }}>No notes yet.</p>
+              </div>
+            ) : (
+              <>
+                {isUpdated && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', flexShrink: 0, display: 'block' }} />
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Updated</span>
+                  </div>
+                )}
+                {!isRead && !isUpdated && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', flexShrink: 0, display: 'block' }} />
+                    <span style={{ fontSize: 9, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unread</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: 5, alignItems: 'flex-start' }}>
+                  <span style={{ color: 'var(--coral)', fontSize: 14, lineHeight: '28px', flexShrink: 0 }}>○</span>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-mid)', lineHeight: '28px' }}>{latest.body}</p>
+                </div>
+                {latest.created_at && (
+                  <p style={{ margin: '4px 0 0', fontSize: 10, color: 'var(--text-light)' }}>
+                    {new Date(latest.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Action row */}
+        {latest && (
+          <div style={{
+            padding: '7px 10px', borderTop: '1px solid var(--border)',
+            display: 'flex', flexWrap: 'wrap', gap: 5, alignItems: 'center',
+          }}>
+            {isRead && !isUpdated ? (
+              <span style={{ fontSize: 10, color: 'var(--mint)', fontWeight: 500 }}>✓ Read</span>
+            ) : (
+              <button
+                onClick={() => markClinicianNoteRead?.(latest)}
+                style={{
+                  background: 'none', border: '1px solid var(--border-mid)',
+                  borderRadius: 20, padding: '3px 9px', fontSize: 10, fontWeight: 600,
+                  color: isUpdated ? '#D97706' : 'var(--coral)', cursor: 'pointer',
+                  fontFamily: "'Outfit', sans-serif",
+                  borderColor: isUpdated ? '#FBB54A' : 'var(--border-mid)',
+                }}
+              >{isUpdated ? 'Acknowledge' : 'Mark as read'}</button>
+            )}
+            <button
+              onClick={() => isSaved ? unsaveClinicianNote?.(latest.id) : saveClinicianNote?.(latest)}
+              style={{
+                background: isSaved ? 'var(--peach-light)' : 'none',
+                border: `1px solid ${isSaved ? 'var(--peach-mid)' : 'var(--border-mid)'}`,
+                borderRadius: 20, padding: '3px 9px', fontSize: 10, fontWeight: 600,
+                color: isSaved ? 'var(--peach)' : 'var(--text-light)', cursor: 'pointer',
+                fontFamily: "'Outfit', sans-serif",
+              }}
+            >{isSaved ? '🔖 Saved' : 'Save 🔖'}</button>
+          </div>
+        )}
+
+        {/* Saved Notes section */}
+        {savedClinicianNotes.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border)' }}>
+            <button
+              onClick={() => setShowSaved(s => !s)}
+              style={{
+                width: '100%', padding: '7px 12px', background: 'none', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--peach)' }}>📌 {savedClinicianNotes.length} saved</span>
+              <span style={{ fontSize: 10, color: 'var(--text-light)' }}>{showSaved ? '▲' : '▼'}</span>
+            </button>
+            {showSaved && (
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                {[...savedClinicianNotes].reverse().map(note => (
+                  <div key={note.id} style={{
+                    backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e8e0d4 27px, #e8e0d4 28px)',
+                    backgroundSize: '100% 28px', backgroundPositionY: '4px',
+                    display: 'flex', borderBottom: '1px solid var(--border)',
+                  }}>
+                    <div style={{ width: 2, background: '#f4b8b8', flexShrink: 0, marginLeft: 8, marginRight: 6 }} />
+                    <div style={{ flex: 1, padding: '7px 8px 7px 0' }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 11, color: 'var(--text-mid)', lineHeight: '28px' }}>{note.body}</p>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 9, color: 'var(--text-light)' }}>
+                          {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                        <button
+                          onClick={() => unsaveClinicianNote?.(note.id)}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: 'var(--text-light)', fontSize: 13, lineHeight: 1, padding: 0,
+                            fontFamily: 'inherit',
+                          }}
+                        >×</button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* All Notes section */}
+        {olderNotes.length > 0 && (
+          <div style={{ borderTop: '1px solid var(--border)' }}>
+            <button
+              onClick={() => setShowAll(s => !s)}
+              style={{
+                width: '100%', padding: '7px 12px', background: 'none', border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
+              }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-mid)' }}>History ({olderNotes.length})</span>
+              <span style={{ fontSize: 10, color: 'var(--text-light)' }}>{showAll ? '▲' : '▼'}</span>
+            </button>
+            {showAll && (
+              <div style={{ borderTop: '1px solid var(--border)' }}>
+                {olderNotes.map(note => {
+                  const isExpanded = expandedNoteId === note.id
+                  const preview = note.body?.length > 50 ? note.body.slice(0, 50) + '…' : note.body
+                  return (
+                    <div
+                      key={note.id}
+                      onClick={() => setExpandedNoteId(isExpanded ? null : note.id)}
+                      style={{
+                        padding: '8px 12px', borderBottom: '1px solid var(--border)',
+                        cursor: 'pointer', background: isExpanded ? 'var(--surface-warm)' : 'white',
+                      }}
+                    >
+                      <div style={{ fontSize: 9, color: 'var(--text-light)', marginBottom: 3 }}>
+                        {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </div>
+                      <p style={{ margin: 0, fontSize: 11, color: 'var(--text-mid)', lineHeight: 1.5 }}>
+                        {isExpanded ? note.body : preview}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export default function DailyView() {
-  const { mealSlots, foodItems, mealLogs, clinicianNotes = [], parentNotes = [], clinicianNotesRead = {}, mealStatuses = {}, insertMealLog, saveParentNote, markClinicianNoteRead, setMealStatus } = useOutletContext()
+  const { mealSlots, foodItems, mealLogs, clinicianNotes = [], parentNotes = [], clinicianNotesRead = {}, mealStatuses = {}, savedClinicianNotes = [], insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, setMealStatus } = useOutletContext()
   const [selectedDay, setSelectedDay] = useState(getTodayKey)
   const [weekOffset, setWeekOffset] = useState(0)
   const [activeDrag, setActiveDrag] = useState(null)
@@ -763,84 +971,14 @@ export default function DailyView() {
             <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-dark)' }}>Parent</div>
           </div>
 
-          <div style={{ marginBottom: 22, position: 'relative', paddingTop: 14 }}>
-            {/* Tape label */}
-            <div style={{
-              position: 'absolute', top: 0, left: '50%',
-              transform: 'translateX(-50%) rotate(-1deg)',
-              background: '#e8dcc8', borderRadius: 4,
-              width: 64, height: 14,
-              zIndex: 1, boxShadow: '0 1px 3px rgba(0,0,0,0.10)',
-            }} />
-
-            {/* Notebook card */}
-            <div style={{
-              background: 'white', border: '1px solid var(--border)',
-              borderRadius: 14, overflow: 'hidden',
-              boxShadow: '0 2px 8px rgba(39,23,6,0.06)',
-            }}>
-              <div style={{ padding: '10px 12px 6px' }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--coral)', fontFamily: "'Outfit', sans-serif" }}>
-                  Clinician Notes
-                </span>
-              </div>
-
-              {/* Ruled area with margin */}
-              {(() => {
-                const today = new Date().toISOString().slice(0, 10)
-                const todayNote = clinicianNotes.find(n => n.created_at?.slice(0, 10) === today)
-                const latest = todayNote || clinicianNotes[0] || null
-                const isRead = latest ? !!clinicianNotesRead[latest.id] : false
-                return (
-                  <div style={{
-                    backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e8e0d4 27px, #e8e0d4 28px)',
-                    backgroundSize: '100% 28px', backgroundPositionY: '4px',
-                    display: 'flex', minHeight: 84,
-                  }}>
-                    <div style={{ width: 2, background: '#f4b8b8', flexShrink: 0, marginLeft: 10, marginRight: 8 }} />
-                    <div style={{ flex: 1, padding: '8px 10px 8px 0' }}>
-                      {!latest ? (
-                        <div style={{ display: 'flex', gap: 5, alignItems: 'flex-start' }}>
-                          <span style={{ color: 'rgba(184,85,53,0.3)', fontSize: 14, lineHeight: '28px' }}>○</span>
-                          <p style={{ margin: 0, fontSize: 12, color: 'var(--text-light)', fontStyle: 'italic', lineHeight: '28px' }}>No notes yet.</p>
-                        </div>
-                      ) : (
-                        <>
-                          {!isRead && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 4 }}>
-                              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F59E0B', flexShrink: 0, display: 'block' }} />
-                              <span style={{ fontSize: 9, fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Unread</span>
-                            </div>
-                          )}
-                          <div style={{ display: 'flex', gap: 5, alignItems: 'flex-start' }}>
-                            <span style={{ color: 'var(--coral)', fontSize: 14, lineHeight: '28px', flexShrink: 0 }}>○</span>
-                            <p style={{ margin: 0, fontSize: 12, color: 'var(--text-mid)', lineHeight: '28px' }}>{latest.body}</p>
-                          </div>
-                          {latest.created_at && (
-                            <p style={{ margin: '4px 0 0', fontSize: 10, color: 'var(--text-light)' }}>
-                              {new Date(latest.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                            </p>
-                          )}
-                          {isRead ? (
-                            <span style={{ fontSize: 10, color: 'var(--mint)', fontWeight: 500, display: 'block', marginTop: 6 }}>✓ Marked as read</span>
-                          ) : (
-                            <button
-                              onClick={() => markClinicianNoteRead?.(latest.id)}
-                              style={{
-                                marginTop: 8, background: 'none', border: '1px solid var(--border-mid)',
-                                borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 600,
-                                color: 'var(--coral)', cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
-                              }}
-                            >Mark as read</button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          </div>
+          <ClinicianNotesSidebar
+            clinicianNotes={clinicianNotes}
+            clinicianNotesRead={clinicianNotesRead}
+            markClinicianNoteRead={markClinicianNoteRead}
+            savedClinicianNotes={savedClinicianNotes}
+            saveClinicianNote={saveClinicianNote}
+            unsaveClinicianNote={unsaveClinicianNote}
+          />
 
           <div>
             <div style={{

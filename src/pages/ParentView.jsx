@@ -19,6 +19,10 @@ export default function ParentView() {
     try { return JSON.parse(localStorage.getItem('clinicianNotesReadByParent') || '{}') }
     catch { return {} }
   })
+  const [savedClinicianNotes, setSavedClinicianNotes] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('savedClinicianNotes') || '[]') }
+    catch { return [] }
+  })
   const [mealStatuses, setMealStatuses] = useState(() => {
     try { return JSON.parse(localStorage.getItem('parentMealStatusesByDate') || '{}') }
     catch { return {} }
@@ -83,10 +87,34 @@ export default function ParentView() {
     })
   }
 
-  function markClinicianNoteRead(noteId) {
-    const next = { ...JSON.parse(localStorage.getItem('clinicianNotesReadByParent') || '{}'), [noteId]: new Date().toISOString() }
+  function markClinicianNoteRead(note) {
+    const stored = JSON.parse(localStorage.getItem('clinicianNotesReadByParent') || '{}')
+    const readAt = new Date().toISOString()
+    const noteDate = note.created_at?.slice(0, 10)
+    const next = {
+      ...stored,
+      [note.id]: { readAt, noteCreatedAt: note.created_at },
+      ['date:' + noteDate]: { noteId: note.id, readAt, noteCreatedAt: note.created_at },
+    }
     localStorage.setItem('clinicianNotesReadByParent', JSON.stringify(next))
     setClinicianNotesRead(next)
+  }
+
+  function saveClinicianNote(note) {
+    setSavedClinicianNotes(prev => {
+      if (prev.some(n => n.id === note.id)) return prev
+      const next = [...prev, { id: note.id, body: note.body, created_at: note.created_at, savedAt: new Date().toISOString() }]
+      localStorage.setItem('savedClinicianNotes', JSON.stringify(next))
+      return next
+    })
+  }
+
+  function unsaveClinicianNote(noteId) {
+    setSavedClinicianNotes(prev => {
+      const next = prev.filter(n => n.id !== noteId)
+      localStorage.setItem('savedClinicianNotes', JSON.stringify(next))
+      return next
+    })
   }
 
   function saveParentNote({ date, body, existingNoteId }) {
@@ -135,7 +163,7 @@ export default function ParentView() {
 
   return (
     <div style={{ width: '100%', padding: '16px 24px' }}>
-      <Outlet context={{ mealSlots, foodItems, mealLogs, clinicianNotes, parentNotes, clinicianNotesRead, mealStatuses, updateMealSlot, insertMealLog, saveParentNote, markClinicianNoteRead, setMealStatus }} />
+      <Outlet context={{ mealSlots, foodItems, mealLogs, clinicianNotes, parentNotes, clinicianNotesRead, mealStatuses, savedClinicianNotes, updateMealSlot, insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, setMealStatus }} />
     </div>
   )
 }
