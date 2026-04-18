@@ -210,7 +210,7 @@ export default function ClinicianView() {
             style={{
               padding: '7px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb',
               fontSize: 13, color: '#111827', background: 'white',
-              fontFamily: "'Outfit', sans-serif", cursor: 'pointer', outline: 'none',
+              fontFamily: "'Lato', sans-serif", cursor: 'pointer', outline: 'none',
             }}
           >
             <option value="">— Select a patient —</option>
@@ -236,7 +236,7 @@ export default function ClinicianView() {
               maxLength={6}
               style={{
                 padding: '7px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb',
-                fontSize: 13, color: '#111827', fontFamily: "'Outfit', sans-serif",
+                fontSize: 13, color: '#111827', fontFamily: "'Lato', sans-serif",
                 outline: 'none', width: 110, letterSpacing: '1px', fontWeight: 600,
               }}
               onFocus={e => e.target.style.borderColor = '#E8735A'}
@@ -251,7 +251,7 @@ export default function ClinicianView() {
                   ? 'rgba(232,115,90,0.4)'
                   : 'linear-gradient(135deg, #E8735A 0%, #C85A8A 100%)',
                 color: 'white', fontSize: 13, fontWeight: 600,
-                fontFamily: "'Outfit', sans-serif",
+                fontFamily: "'Lato', sans-serif",
                 cursor: addCodeLoading || addCodeInput.length < 6 ? 'not-allowed' : 'pointer',
               }}
             >
@@ -285,13 +285,13 @@ export default function ClinicianView() {
             foodItems={foodItems}
             mode="clinician"
             latestLogBySlot={latestLogBySlot}
-            onDayClick={day => setSelectedDay(day)}
+            onDayClick={(day, date) => setSelectedDay({ key: day, date })}
             parentNotes={parentNotes}
             onMarkNoteRead={handleMarkNoteRead}
             parentMealItems={parentMealItems}
           />
-          <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} />
-          <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" />
+          <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} allMealItems={parentMealItems} />
+          <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" allMealItems={parentMealItems} />
           <NutritionalTargets />
           <div style={{
             background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb',
@@ -311,7 +311,7 @@ export default function ClinicianView() {
                 required
                 style={{
                   border: '1.5px solid #d1d5db', borderRadius: 10, padding: '8px 12px',
-                  fontSize: 13, color: '#111827', fontFamily: "'Outfit', sans-serif",
+                  fontSize: 13, color: '#111827', fontFamily: "'Lato', sans-serif",
                   outline: 'none',
                 }}
               />
@@ -323,7 +323,7 @@ export default function ClinicianView() {
                   border: 'none', background: '#6366f1', color: 'white',
                   cursor: apptDateTime && !apptSaving ? 'pointer' : 'not-allowed',
                   opacity: !apptDateTime || apptSaving ? 0.5 : 1,
-                  fontFamily: "'Outfit', sans-serif",
+                  fontFamily: "'Lato', sans-serif",
                 }}
               >
                 {apptSaving ? 'Saving…' : 'Schedule'}
@@ -344,9 +344,11 @@ export default function ClinicianView() {
 
       {selectedDay && (
         <DailyNutritionSummary
-          day={selectedDay}
+          day={selectedDay.key}
+          dateIso={selectedDay.date}
           mealSlots={mealSlots}
           foodItems={foodItems}
+          loggedMealItems={parentMealItems[selectedDay.date] || {}}
           onClose={() => setSelectedDay(null)}
         />
       )}

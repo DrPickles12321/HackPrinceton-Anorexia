@@ -1,30 +1,23 @@
 import { useMemo } from 'react'
-import { lookupMealNutrition, aggregateMealNutrition, lookupNutrition, energyDensityLabel } from '../../lib/nutritionService'
+import { aggregateMealNutrition, lookupNutrition } from '../../lib/nutritionService'
 import MacroBreakdown from './MacroBreakdown'
 import MicroBreakdown from './MicroBreakdown'
 import PlateVisual from './PlateVisual'
 import FlagChip from './FlagChip'
-
 const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack']
 const MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' }
 const DAY_LABEL = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' }
 
-export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClose }) {
-  const daySlots = useMemo(
-    () => mealSlots.filter(s => s.day === day && s.assigned_food_id),
-    [day, mealSlots]
-  )
-
+export default function DailyNutritionSummary({ day, dateIso, mealSlots, foodItems, loggedMealItems = {}, onClose }) {
   const mealData = useMemo(() => {
-    return MEAL_ORDER.map(mealType => {
-      const slot = daySlots.find(s => s.meal_type === mealType)
-      if (!slot) return null
-      const food = foodItems.find(f => f.id === slot.assigned_food_id)
-      if (!food) return null
-      const info = lookupNutrition(food.name, food.category)
-      return { mealType, food, info }
-    }).filter(Boolean)
-  }, [daySlots, foodItems])
+    return MEAL_ORDER.flatMap(mealType => {
+      const items = loggedMealItems[mealType] || []
+      return items.map(item => {
+        const info = lookupNutrition(item.name, item.category || 'working_on')
+        return { mealType, food: item, info }
+      })
+    })
+  }, [loggedMealItems])
 
   const dayTotal = useMemo(() => {
     if (mealData.length === 0) return null
@@ -51,7 +44,9 @@ export default function DailyNutritionSummary({ day, mealSlots, foodItems, onClo
 
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {mealData.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 text-sm">No meals planned for {DAY_LABEL[day]}.</div>
+          <div className="text-center py-12 text-gray-400 text-sm">
+            No meals logged for {DAY_LABEL[day]}.
+          </div>
         ) : (
           <>
             {dayTotal && (

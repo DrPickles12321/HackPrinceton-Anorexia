@@ -174,7 +174,7 @@ function RoleCard({ onClick, icon, iconBg, title, subtitle, accentColor, hoverSh
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         cursor: 'pointer', transition: 'all 0.2s ease',
         boxShadow: '0 2px 10px rgba(39,23,6,0.06)', textAlign: 'left', width: '100%',
-        fontFamily: "'Outfit', sans-serif",
+        fontFamily: "'Lato', sans-serif",
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>

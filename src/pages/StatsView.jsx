@@ -79,7 +79,7 @@ function AIInsightsSection({ weekStatuses, allMealItems = {} }) {
           <button onClick={load} style={{
             background: 'none', border: '1px solid var(--border-mid)', borderRadius: 8,
             padding: '4px 12px', fontSize: 12, color: 'var(--coral)', cursor: 'pointer',
-            fontFamily: "'Outfit', sans-serif", fontWeight: 600,
+            fontFamily: "'Lato', sans-serif", fontWeight: 600,
           }}>Retry</button>
         </div>
       )}

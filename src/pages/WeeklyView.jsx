@@ -330,7 +330,7 @@ export default function WeeklyView() {
                     border: 'none',
                     cursor: 'pointer',
                     transition: 'color 0.15s, background 0.15s',
-                    fontFamily: "'Outfit', sans-serif",
+                    fontFamily: "'Lato', sans-serif",
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                   }}
                 >

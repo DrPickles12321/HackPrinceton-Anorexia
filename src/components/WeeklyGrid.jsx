@@ -8,8 +8,8 @@ const DAYS = [
   { key: 'wed', label: 'Wed' },
   { key: 'thu', label: 'Thu' },
   { key: 'fri', label: 'Fri' },
-  { key: 'sat', label: 'Sat', isWeekend: true },
-  { key: 'sun', label: 'Sun', isWeekend: true },
+  { key: 'sat', label: 'Sat' },
+  { key: 'sun', label: 'Sun' },
 ]
 
 const MEAL_TYPES = [
@@ -65,7 +65,7 @@ function ParentMealSlot({ slot, foodName, foodCategory, onSlotClick, isWeekend }
       tabIndex={filled ? 0 : undefined}
       aria-label={filled ? `${DAY_LABELS_FULL[slot.day]} ${slot.meal_type}, ${foodName}. Click to log meal.` : `${DAY_LABELS_FULL[slot.day]} ${slot.meal_type}, empty. Drag a food here.`}
       className={`${SLOT_BASE}
-        ${isWeekend ? 'bg-blue-50/30' : 'bg-white'}
+        bg-white
         ${filled ? 'cursor-pointer hover:bg-gray-50 hover:shadow-md' : 'border-dashed border-gray-300 cursor-default'}
         ${isOver ? '!bg-blue-100 !border-blue-400 border-2' : 'border-gray-200'}
       `}
@@ -86,8 +86,7 @@ function ClinicianMealSlot({ items = [], latestLog, isWeekend }) {
   const filled = items.length > 0
   return (
     <div
-      className={`${SLOT_BASE} cursor-default
-        ${isWeekend ? 'bg-blue-50/30' : 'bg-white'}
+      className={`${SLOT_BASE} cursor-default bg-white
         ${filled ? 'border-gray-200' : 'border-dashed border-gray-200'}
       `}
     >
@@ -166,10 +165,10 @@ export default function WeeklyGrid({ mealSlots, foodItems, mode = 'parent', onSl
               return (
                 <div
                   key={day.key}
-                  onClick={clickable ? () => onDayClick(day.key) : undefined}
+                  onClick={clickable ? () => onDayClick(day.key, dateIso) : undefined}
                   className={[
                     'text-center py-2 rounded transition-colors',
-                    isToday ? 'bg-orange-50 text-orange-600' : day.isWeekend ? 'bg-blue-50 text-blue-900' : 'text-gray-600',
+                    isToday ? 'bg-orange-50 text-orange-600' : 'text-gray-600',
                     clickable ? 'cursor-pointer hover:bg-indigo-50 hover:text-indigo-800' : '',
                   ].join(' ')}
                   title={clickable ? `View ${day.label} nutrition` : undefined}

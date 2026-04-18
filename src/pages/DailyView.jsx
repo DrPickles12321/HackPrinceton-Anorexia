@@ -90,7 +90,7 @@ function DropZone({ mealType, items, onRemove }) {
       style={{
         flex: 1, minHeight: 48, borderRadius: 12,
         border: items.length === 0
-          ? `2px dashed ${isOver ? 'var(--coral)' : 'var(--border-mid)'}`
+          ? `1.5px dashed ${isOver ? 'var(--coral)' : '#d4a0a5'}`
           : '1.5px solid var(--border-mid)',
         background: isOver ? 'var(--coral-light)' : (items.length > 0 ? 'var(--surface-warm)' : 'transparent'),
         padding: items.length > 0 ? '8px 10px' : '0 14px',
@@ -99,7 +99,7 @@ function DropZone({ mealType, items, onRemove }) {
       }}
     >
       {items.length === 0 ? (
-        <span style={{ fontSize: 12, color: isOver ? 'var(--coral)' : 'var(--text-light)' }}>
+        <span style={{ fontSize: 12, color: isOver ? 'var(--coral)' : '#b08a8e' }}>
           {isOver ? 'Drop here ↓' : '+ drag a food here'}
         </span>
       ) : (
@@ -198,7 +198,7 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
         borderBottom: '1px solid var(--border)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-          <span style={{ fontSize: 17 }}>{meal.icon}</span>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: meal.color, display: 'inline-block', flexShrink: 0 }} />
           <span style={{ fontWeight: 600, fontSize: 14, color: meal.color }}>{meal.label}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.88)', borderRadius: 10, padding: '5px 8px' }}>
@@ -249,20 +249,18 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
                 onClick={() => hasItems && onQuickLog(slot, opt.key)}
                 disabled={!hasItems}
                 style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                  padding: '7px 11px', borderRadius: 10,
-                  border: `1.5px solid ${selected ? opt.color : 'var(--border)'}`,
-                  background: selected ? opt.bg : 'white',
+                  padding: '6px 14px', borderRadius: 20,
+                  border: `0.5px solid ${selected ? '#b08a8e' : '#d4a0a5'}`,
+                  background: selected ? '#e8c5c8' : '#faf8f6',
+                  color: '#3a3030',
                   cursor: hasItems ? 'pointer' : 'default',
                   opacity: hasItems ? 1 : 0.38,
-                  transition: 'all 0.15s', minWidth: 50,
-                  fontFamily: "'Outfit', sans-serif",
+                  transition: 'all 0.15s',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12, fontWeight: 500,
                 }}
               >
-                <span style={{ fontSize: 18 }}>{opt.emoji}</span>
-                <span style={{ fontSize: 10, fontWeight: 500, color: selected ? opt.color : 'var(--text-light)' }}>
-                  {opt.label}
-                </span>
+                {opt.label}
               </button>
             )
           })}
@@ -369,7 +367,7 @@ function ParentNoteSection({ note, selectedDate, onSave }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           borderBottom: '1px solid var(--border)',
         }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--coral)', fontFamily: "'Outfit', sans-serif" }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--coral)', fontFamily: "'Lato', sans-serif" }}>
             Parent Note
           </span>
           {isRead && (
@@ -394,7 +392,7 @@ function ParentNoteSection({ note, selectedDate, onSave }) {
               style={{
                 width: '100%', border: 'none', background: 'transparent',
                 resize: 'none', outline: 'none',
-                fontSize: 13, fontFamily: "'Outfit', sans-serif",
+                fontSize: 13, fontFamily: "'Lato', sans-serif",
                 color: 'var(--text-dark)', lineHeight: '28px',
                 padding: 0, boxSizing: 'border-box',
               }}
@@ -425,7 +423,7 @@ function ParentNoteSection({ note, selectedDate, onSave }) {
                 border: 'none', borderRadius: 20, padding: '6px 18px',
                 fontSize: 12, fontWeight: 600,
                 cursor: (!isDirty || isSaving) ? 'default' : 'pointer',
-                fontFamily: "'Outfit', sans-serif", transition: 'all 0.15s',
+                fontFamily: "'Lato', sans-serif", transition: 'all 0.15s',
                 boxShadow: !isDirty || isSaving ? 'none' : '0 2px 8px rgba(184,85,53,0.28)',
               }}
             >
@@ -531,7 +529,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
         boxShadow: '0 2px 8px rgba(39,23,6,0.06)',
       }}>
         <div style={{ padding: '10px 12px 6px' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--coral)', fontFamily: "'Outfit', sans-serif" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--coral)', fontFamily: "'Lato', sans-serif" }}>
             Clinician Notes
           </span>
         </div>
@@ -592,7 +590,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                   background: 'none', border: '1px solid var(--border-mid)',
                   borderRadius: 20, padding: '3px 9px', fontSize: 10, fontWeight: 600,
                   color: isUpdated ? '#D97706' : 'var(--coral)', cursor: 'pointer',
-                  fontFamily: "'Outfit', sans-serif",
+                  fontFamily: "'Lato', sans-serif",
                   borderColor: isUpdated ? '#FBB54A' : 'var(--border-mid)',
                 }}
               >{isUpdated ? 'Acknowledge' : 'Mark as read'}</button>
@@ -604,7 +602,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                 border: `1px solid ${isSaved ? 'var(--peach-mid)' : 'var(--border-mid)'}`,
                 borderRadius: 20, padding: '3px 9px', fontSize: 10, fontWeight: 600,
                 color: isSaved ? 'var(--peach)' : 'var(--text-light)', cursor: 'pointer',
-                fontFamily: "'Outfit', sans-serif",
+                fontFamily: "'Lato', sans-serif",
               }}
             >{isSaved ? '🔖 Saved' : 'Save 🔖'}</button>
           </div>
@@ -618,7 +616,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
               width: '100%', padding: '7px 12px', background: 'none', border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               cursor: savedClinicianNotes.length > 0 ? 'pointer' : 'default',
-              fontFamily: "'Outfit', sans-serif",
+              fontFamily: "'Lato', sans-serif",
               opacity: savedClinicianNotes.length > 0 ? 1 : 0.4,
             }}
           >
@@ -659,7 +657,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
               {/* Clear all */}
               <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'flex-end' }}>
                 {confirmClear ? (
-                  <span style={{ fontSize: 10, color: 'var(--text-mid)', fontFamily: "'Outfit', sans-serif" }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-mid)', fontFamily: "'Lato', sans-serif" }}>
                     Sure?{' '}
                     <button
                       onClick={() => { clearAllSavedNotes?.(); setShowSaved(false); setConfirmClear(false) }}
@@ -679,7 +677,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
                       fontSize: 10, color: 'var(--text-light)', padding: 0,
-                      fontFamily: "'Outfit', sans-serif", transition: 'color 0.15s',
+                      fontFamily: "'Lato', sans-serif", transition: 'color 0.15s',
                     }}
                   >Clear all saved</button>
                 )}
@@ -696,7 +694,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
               style={{
                 width: '100%', padding: '7px 12px', background: 'none', border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
+                cursor: 'pointer', fontFamily: "'Lato', sans-serif",
               }}
             >
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-mid)' }}>History ({olderNotes.length})</span>
@@ -807,7 +805,12 @@ export default function DailyView() {
   }
 
   function removeItem(mealType, index) {
-    setMealItemsForDay(prev => ({ ...prev, [mealType]: prev[mealType].filter((_, i) => i !== index) }))
+    const current = { ...EMPTY_MEAL_ITEMS, ...(allMealItems[selectedDate] || {}) }
+    const next = current[mealType].filter((_, i) => i !== index)
+    setMealItemsForDay(prev => ({ ...prev, [mealType]: next }))
+    if (next.length === 0) {
+      setMealStatus(selectedDate, mealType, null)
+    }
   }
 
   async function handleQuickLog(slot, mealType, status) {
@@ -888,7 +891,7 @@ export default function DailyView() {
                       fontWeight: isSelected ? 600 : isToday ? 600 : 400,
                       fontSize: 11, cursor: 'pointer', transition: 'all 0.15s',
                       boxShadow: isSelected ? '0 2px 8px rgba(184,85,53,0.3)' : 'none',
-                      fontFamily: "'Outfit', sans-serif",
+                      fontFamily: "'Lato', sans-serif",
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                     }}
                   >
@@ -910,10 +913,11 @@ export default function DailyView() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {MEALS.map(meal => {
               const slot = getSlot(meal.key)
-              const localStatus = (mealStatuses[selectedDate] || {})[meal.key]
+              const hasItems = mealItems[meal.key].length > 0
+              const localStatus = hasItems ? (mealStatuses[selectedDate] || {})[meal.key] ?? null : null
               const latestLog = localStatus
                 ? { status: localStatus }
-                : getLatestLog(slot?.id)
+                : (hasItems ? getLatestLog(slot?.id) : null)
               return (
                 <MealCard
                   key={meal.key}

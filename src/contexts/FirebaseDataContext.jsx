@@ -6,6 +6,16 @@ import { useAuth } from './AuthContext'
 const FirebaseDataContext = createContext(null)
 
 const DEFAULT_TARGETS = { protein: 75, carbs: 150, fruitsVeggies: 200 }
+
+function getISOWeek(date) {
+  const d = new Date(date)
+  d.setHours(0,0,0,0)
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7)
+  const week1 = new Date(d.getFullYear(), 0, 4)
+  return d.getFullYear() + '-W' +
+    String(1 + Math.round(((d - week1) / 86400000 - 3 +
+    (week1.getDay() + 6) % 7) / 7)).padStart(2, '0')
+}
 const DEFAULT_MEAL_TIMES = { breakfast: '08:00', lunch: '13:00', snack: '15:30', dinner: '19:00' }
 
 function fbToArr(val) {
@@ -139,6 +149,22 @@ export function FirebaseDataProvider({ children }) {
     }))
 
     return () => unsubs.forEach(u => u())
+  }, [uid])
+
+  // ── Weekly reset ───────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!uid) return
+    const currentWeek = getISOWeek(new Date())
+    const base = `users/${uid}`
+    get(ref(db, `${base}/lastResetWeek`)).then(snap => {
+      if (snap.val() !== currentWeek) {
+        update(ref(db), {
+          [`${base}/mealLogs`]: {},
+          [`${base}/insights`]: { okay: 0, difficult: 0, refused: 0 },
+          [`${base}/lastResetWeek`]: currentWeek,
+        })
+      }
+    })
   }, [uid])
 
   // ── Subscribe to selected patient data (for clinician) ────────────────────

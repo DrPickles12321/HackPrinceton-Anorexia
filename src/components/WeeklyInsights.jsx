@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { computeInsights, computeNutritionInsights } from '../lib/insights'
+import { computeInsights, computeNutritionInsights, computeInsightsFromMealItems, computeNutritionInsightsFromMealItems } from '../lib/insights'
 import { FLAG_CONFIG } from './nutrition/FlagChip'
 
 const MEAL_LABELS = { breakfast: 'breakfasts', lunch: 'lunches', dinner: 'dinners', snack: 'snacks' }
@@ -24,15 +24,18 @@ function StatCard({ icon, label, value, subtext, tone = 'neutral' }) {
   )
 }
 
-export default function WeeklyInsights({ mealLogs, foodItems, mealSlots }) {
-  const insights = useMemo(
-    () => computeInsights({ mealLogs, foodItems, mealSlots }),
-    [mealLogs, foodItems, mealSlots]
-  )
-  const nutritionInsights = useMemo(
-    () => computeNutritionInsights({ mealSlots, foodItems }),
-    [mealSlots, foodItems]
-  )
+export default function WeeklyInsights({ mealLogs, foodItems, mealSlots, allMealItems }) {
+  const hasFirebaseData = allMealItems && Object.keys(allMealItems).length > 0
+
+  const insights = useMemo(() => {
+    if (hasFirebaseData) return computeInsightsFromMealItems(allMealItems)
+    return computeInsights({ mealLogs, foodItems, mealSlots })
+  }, [allMealItems, mealLogs, foodItems, mealSlots, hasFirebaseData])
+
+  const nutritionInsights = useMemo(() => {
+    if (hasFirebaseData) return computeNutritionInsightsFromMealItems(allMealItems)
+    return computeNutritionInsights({ mealSlots, foodItems })
+  }, [allMealItems, mealSlots, foodItems, hasFirebaseData])
 
   return (
     <section className="mt-8 bg-gray-50 rounded-xl p-6">
