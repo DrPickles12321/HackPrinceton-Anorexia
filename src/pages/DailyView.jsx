@@ -529,6 +529,23 @@ export default function DailyView() {
       .sort((a, b) => new Date(b.logged_at) - new Date(a.logged_at))[0] || null
   }
 
+  // Deduplicated weekly counts — one entry per slot, latest log wins
+  const weeklyStatusCounts = useMemo(() => {
+    const latestBySlot = {}
+    for (const log of mealLogs) {
+      const existing = latestBySlot[log.meal_slot_id]
+      if (!existing || new Date(log.logged_at) > new Date(existing.logged_at)) {
+        latestBySlot[log.meal_slot_id] = log
+      }
+    }
+    const latest = Object.values(latestBySlot)
+    return {
+      okay:      latest.filter(l => l.status === 'okay').length,
+      difficult: latest.filter(l => l.status === 'difficult').length,
+      refused:   latest.filter(l => l.status === 'refused').length,
+    }
+  }, [mealLogs])
+
   function handleDragEnd(event) {
     const { active, over } = event
     setActiveDrag(null)
@@ -762,9 +779,9 @@ export default function DailyView() {
               letterSpacing: '0.7px', textTransform: 'uppercase', marginBottom: 9,
             }}>This Week</div>
             {[
-              { label: 'Okay',      count: mealLogs.filter(l => l.status === 'okay').length,      color: 'var(--mint)',  bg: 'var(--mint-light)',  border: 'var(--mint-mid)' },
-              { label: 'Difficult', count: mealLogs.filter(l => l.status === 'difficult').length,  color: 'var(--peach)', bg: 'var(--peach-light)', border: 'var(--peach-mid)' },
-              { label: 'Refused',   count: mealLogs.filter(l => l.status === 'refused').length,    color: 'var(--pink)',  bg: 'var(--pink-light)',  border: 'var(--pink-mid)' },
+              { label: 'Okay',      count: weeklyStatusCounts.okay,      color: 'var(--mint)',  bg: 'var(--mint-light)',  border: 'var(--mint-mid)' },
+              { label: 'Difficult', count: weeklyStatusCounts.difficult, color: 'var(--peach)', bg: 'var(--peach-light)', border: 'var(--peach-mid)' },
+              { label: 'Refused',   count: weeklyStatusCounts.refused,   color: 'var(--pink)',  bg: 'var(--pink-light)',  border: 'var(--pink-mid)' },
             ].map(s => (
               <div key={s.label} style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',

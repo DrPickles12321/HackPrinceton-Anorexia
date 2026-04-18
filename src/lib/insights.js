@@ -126,15 +126,25 @@ export function computeInsights({ mealLogs, foodItems, mealSlots }) {
   const cutoff = Date.now() - ONE_WEEK_MS
 
   const recentLogs = mealLogs.filter(log => new Date(log.logged_at).getTime() >= cutoff)
-  const totalLogs = recentLogs.length
+
+  // Keep only the latest log per slot so re-logging doesn't inflate counts
+  const latestBySlot = {}
+  for (const log of recentLogs) {
+    const existing = latestBySlot[log.meal_slot_id]
+    if (!existing || new Date(log.logged_at) > new Date(existing.logged_at)) {
+      latestBySlot[log.meal_slot_id] = log
+    }
+  }
+  const dedupedLogs = Object.values(latestBySlot)
+  const totalLogs = dedupedLogs.length
 
   if (totalLogs === 0) {
     return { totalLogs: 0, okay: 0, difficult: 0, refused: 0, hardestMealType: null, topRefusedCategory: null }
   }
 
-  const okay = recentLogs.filter(l => l.status === 'okay').length
-  const difficult = recentLogs.filter(l => l.status === 'difficult').length
-  const refused = recentLogs.filter(l => l.status === 'refused').length
+  const okay      = dedupedLogs.filter(l => l.status === 'okay').length
+  const difficult = dedupedLogs.filter(l => l.status === 'difficult').length
+  const refused   = dedupedLogs.filter(l => l.status === 'refused').length
 
   const slotMealType = {}
   const slotFoodId = {}
@@ -149,7 +159,7 @@ export function computeInsights({ mealLogs, foodItems, mealSlots }) {
   }
 
   const hardCountByMealType = { breakfast: 0, lunch: 0, dinner: 0, snack: 0 }
-  for (const log of recentLogs) {
+  for (const log of dedupedLogs) {
     if (log.status === 'difficult' || log.status === 'refused') {
       const mt = slotMealType[log.meal_slot_id]
       if (mt) hardCountByMealType[mt]++
@@ -167,7 +177,7 @@ export function computeInsights({ mealLogs, foodItems, mealSlots }) {
   }
 
   const refusedByCategory = { familiar: 0, working_on: 0, challenge: 0 }
-  for (const log of recentLogs) {
+  for (const log of dedupedLogs) {
     if (log.status !== 'refused') continue
     const foodId = slotFoodId[log.meal_slot_id]
     if (!foodId) continue
