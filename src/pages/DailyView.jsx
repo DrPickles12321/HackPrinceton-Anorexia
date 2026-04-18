@@ -757,10 +757,10 @@ export default function DailyView() {
   const mealTimes = fbMealTimes
 
   const selectedDate = weekDates[selectedDay]
-  const mealItems = allMealItems[selectedDate] || EMPTY_MEAL_ITEMS
+  const mealItems = { ...EMPTY_MEAL_ITEMS, ...(allMealItems[selectedDate] || {}) }
 
   function setMealItemsForDay(updater) {
-    const current = allMealItems[selectedDate] || EMPTY_MEAL_ITEMS
+    const current = { ...EMPTY_MEAL_ITEMS, ...(allMealItems[selectedDate] || {}) }
     const next = updater(current)
     for (const mealType of Object.keys(next)) {
       if (next[mealType] !== current[mealType]) {
