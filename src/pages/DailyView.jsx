@@ -756,6 +756,7 @@ export default function DailyView() {
     supplementLog, toggleSupplement,
     allMealItems, setMealItems,
     mealTimes: fbMealTimes, updateMealTime,
+    prescribedSupplements,
   } = useFirebaseData()
 
   const weekDates = useMemo(() => getWeekDates(weekOffset), [weekOffset])
@@ -1024,6 +1025,7 @@ export default function DailyView() {
               selectedDay={selectedDay}
               checkedSupplements={checkedSupplements}
               onToggleChecked={handleToggleSupplement}
+              prescribedSupplements={prescribedSupplements}
             />
           </div>
         </aside>

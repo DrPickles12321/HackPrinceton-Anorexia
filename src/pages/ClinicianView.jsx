@@ -5,6 +5,90 @@ import { useRealtime } from '../hooks/useRealtime'
 import { useRealtimeStatus } from '../contexts/RealtimeContext'
 import { useToast } from '../hooks/useToast'
 import { useFirebaseData } from '../contexts/FirebaseDataContext'
+
+function ClinicianSupplementEditor({ prescribedSupplements, onSave }) {
+  const [input, setInput] = useState('')
+  const [saved, setSaved] = useState(false)
+
+  function handleAdd() {
+    const trimmed = input.trim()
+    if (!trimmed || prescribedSupplements.includes(trimmed)) return
+    onSave([...prescribedSupplements, trimmed])
+    setInput('')
+    setSaved(true)
+    setTimeout(() => setSaved(false), 1500)
+  }
+
+  function handleRemove(name) {
+    onSave(prescribedSupplements.filter(s => s !== name))
+  }
+
+  return (
+    <div style={{
+      background: 'white', borderRadius: 16,
+      border: '1.5px solid #e5e7eb', padding: '20px 24px', marginTop: 16,
+    }}>
+      <h2 style={{ fontSize: 15, fontWeight: 700, color: '#111827', marginBottom: 4 }}>
+        Prescribed Supplements
+      </h2>
+      <p style={{ fontSize: 12, color: '#6b7280', marginBottom: 16 }}>
+        These will appear in the patient's daily supplement checklist.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleAdd()}
+          placeholder="e.g. Calcium + D3"
+          style={{
+            flex: 1, padding: '8px 12px', borderRadius: 10,
+            border: '1.5px solid #e5e7eb', fontSize: 13,
+            color: '#111827', fontFamily: "'Outfit', sans-serif", outline: 'none',
+          }}
+          onFocus={e => e.target.style.borderColor = '#E8735A'}
+          onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!input.trim()}
+          style={{
+            padding: '8px 18px', borderRadius: 10, border: 'none',
+            background: input.trim() ? '#E8735A' : 'rgba(232,115,90,0.3)',
+            color: 'white', fontSize: 13, fontWeight: 600,
+            fontFamily: "'Outfit', sans-serif",
+            cursor: input.trim() ? 'pointer' : 'not-allowed',
+          }}
+        >{saved ? 'Added ✓' : 'Add'}</button>
+      </div>
+      {prescribedSupplements.length === 0 ? (
+        <p style={{ fontSize: 12, color: '#9ca3af', fontStyle: 'italic' }}>No supplements prescribed yet.</p>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          {prescribedSupplements.map(name => (
+            <span key={name} style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: '#fef3f0', border: '1px solid #f5c4b8',
+              borderRadius: 20, padding: '5px 12px',
+              fontSize: 13, color: '#E8735A', fontWeight: 500,
+              fontFamily: "'Outfit', sans-serif",
+            }}>
+              {name}
+              <button
+                onClick={() => handleRemove(name)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#E8735A', fontSize: 16, lineHeight: 1,
+                  padding: 0, display: 'flex', alignItems: 'center',
+                  fontFamily: 'inherit', opacity: 0.6,
+                }}
+              >×</button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 import WeeklyGrid from '../components/WeeklyGrid'
 import WeeklyInsights from '../components/WeeklyInsights'
 import NotesPanel from '../components/NotesPanel'
@@ -27,6 +111,8 @@ export default function ClinicianView() {
     viewingPatientUid,
     setViewingPatientUid,
     addPatientByCode,
+    prescribedSupplements,
+    savePrescribedSupplements,
   } = useFirebaseData()
 
   const [addCodeInput, setAddCodeInput]   = useState('')
@@ -292,6 +378,12 @@ export default function ClinicianView() {
           />
           <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} allMealItems={parentMealItems} />
           <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" allMealItems={parentMealItems} />
+          {viewingPatientUid && (
+            <ClinicianSupplementEditor
+              prescribedSupplements={prescribedSupplements}
+              onSave={savePrescribedSupplements}
+            />
+          )}
           <NutritionalTargets />
           <div style={{
             background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb',

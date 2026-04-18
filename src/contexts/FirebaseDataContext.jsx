@@ -79,6 +79,8 @@ export function FirebaseDataProvider({ children }) {
   const [viewingPatientUid, setViewingPatientUid]     = useState(null)
   const [patientFbMealData, setPatientFbMealData]     = useState({})
   const [patientNutritionalTargets, setPatientNutritionalTargets] = useState(DEFAULT_TARGETS)
+  const [ownPrescribedSupplements, setOwnPrescribedSupplements]       = useState([])
+  const [patientPrescribedSupplements, setPatientPrescribedSupplements] = useState([])
 
   // ── Subscribe to own data ──────────────────────────────────────────────────
   useEffect(() => {
@@ -93,6 +95,7 @@ export function FirebaseDataProvider({ children }) {
       setFamilyCode(null)
       setPatients([])
       setViewingPatientUid(null)
+      setOwnPrescribedSupplements([])
       return
     }
 
@@ -125,6 +128,11 @@ export function FirebaseDataProvider({ children }) {
       const normalized = {}
       for (const [date, items] of Object.entries(val)) normalized[date] = fbToArr(items)
       setSupplementLog(normalized)
+    }))
+
+    unsubs.push(onValue(ref(db, `${base}/prescribedSupplements`), snap => {
+      const val = snap.val()
+      setOwnPrescribedSupplements(Array.isArray(val) ? val : [])
     }))
 
     unsubs.push(onValue(ref(db, `${base}/clinicianNotesRead`), snap => {
@@ -172,6 +180,7 @@ export function FirebaseDataProvider({ children }) {
     if (!viewingPatientUid) {
       setPatientFbMealData({})
       setPatientNutritionalTargets(DEFAULT_TARGETS)
+      setPatientPrescribedSupplements([])
       return
     }
     const unsubs = []
@@ -182,6 +191,10 @@ export function FirebaseDataProvider({ children }) {
       const val = snap.val()
       setPatientNutritionalTargets(val && !val.breakfast ? val : DEFAULT_TARGETS)
     }))
+    unsubs.push(onValue(ref(db, `users/${viewingPatientUid}/prescribedSupplements`), snap => {
+      const val = snap.val()
+      setPatientPrescribedSupplements(Array.isArray(val) ? val : [])
+    }))
     return () => unsubs.forEach(u => u())
   }, [viewingPatientUid])
 
@@ -191,6 +204,7 @@ export function FirebaseDataProvider({ children }) {
   const allMealItems           = deriveMealItems(activeFbMealData)
   const mealStatuses           = deriveMealStatuses(fbMealData)   // always own (parent statuses)
   const parentNotesArray       = Object.values(parentNotesByDate)
+  const prescribedSupplements  = viewingPatientUid ? patientPrescribedSupplements : ownPrescribedSupplements
 
   // ── Write functions ────────────────────────────────────────────────────────
 
@@ -297,6 +311,14 @@ export function FirebaseDataProvider({ children }) {
     setSavedClinicianNotes([])
   }
 
+  function savePrescribedSupplements(supplements) {
+    const targetUid = viewingPatientUid || uid
+    if (!targetUid) return
+    set(ref(db, `users/${targetUid}/prescribedSupplements`), supplements.length ? supplements : null)
+    if (viewingPatientUid) setPatientPrescribedSupplements(supplements)
+    else setOwnPrescribedSupplements(supplements)
+  }
+
   async function addPatientByCode(code) {
     if (!uid) return { error: 'Not logged in' }
     const upper = code.toUpperCase().trim()
@@ -335,6 +357,8 @@ export function FirebaseDataProvider({ children }) {
       setMealStatus,
       familyCode,
       patients,
+      prescribedSupplements,
+      savePrescribedSupplements,
       viewingPatientUid,
       setViewingPatientUid,
       addPatientByCode,
