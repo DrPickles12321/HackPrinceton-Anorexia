@@ -117,6 +117,11 @@ export default function ParentView() {
     })
   }
 
+  function clearAllSavedNotes() {
+    localStorage.setItem('savedClinicianNotes', '[]')
+    setSavedClinicianNotes([])
+  }
+
   function saveParentNote({ date, body, existingNoteId }) {
     const stored = JSON.parse(localStorage.getItem('parentNotesByDate') || '{}')
     const note = existingNoteId
@@ -163,7 +168,7 @@ export default function ParentView() {
 
   return (
     <div style={{ width: '100%', padding: '16px 24px' }}>
-      <Outlet context={{ mealSlots, foodItems, mealLogs, clinicianNotes, parentNotes, clinicianNotesRead, mealStatuses, savedClinicianNotes, updateMealSlot, insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, setMealStatus }} />
+      <Outlet context={{ mealSlots, foodItems, mealLogs, clinicianNotes, parentNotes, clinicianNotesRead, mealStatuses, savedClinicianNotes, updateMealSlot, insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, clearAllSavedNotes, setMealStatus }} />
     </div>
   )
 }

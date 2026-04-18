@@ -506,10 +506,11 @@ function DailyProgressPanel({ mealItems }) {
 
 // ─── Clinician notes sidebar ──────────────────────────────────────────────────
 
-function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinicianNoteRead, savedClinicianNotes, saveClinicianNote, unsaveClinicianNote }) {
+function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinicianNoteRead, savedClinicianNotes, saveClinicianNote, unsaveClinicianNote, clearAllSavedNotes }) {
   const [showSaved, setShowSaved] = useState(false)
   const [showAll, setShowAll] = useState(false)
   const [expandedNoteId, setExpandedNoteId] = useState(null)
+  const [confirmClear, setConfirmClear] = useState(false)
 
   const today = new Date().toISOString().slice(0, 10)
   const todayNote = clinicianNotes.find(n => n.created_at?.slice(0, 10) === today)
@@ -621,50 +622,82 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
         )}
 
         {/* Saved Notes section */}
-        {savedClinicianNotes.length > 0 && (
-          <div style={{ borderTop: '1px solid var(--border)' }}>
-            <button
-              onClick={() => setShowSaved(s => !s)}
-              style={{
-                width: '100%', padding: '7px 12px', background: 'none', border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                cursor: 'pointer', fontFamily: "'Outfit', sans-serif",
-              }}
-            >
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--peach)' }}>📌 {savedClinicianNotes.length} saved</span>
+        <div style={{ borderTop: '1px solid var(--border)' }}>
+          <button
+            onClick={() => savedClinicianNotes.length > 0 && setShowSaved(s => !s)}
+            style={{
+              width: '100%', padding: '7px 12px', background: 'none', border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              cursor: savedClinicianNotes.length > 0 ? 'pointer' : 'default',
+              fontFamily: "'Outfit', sans-serif",
+              opacity: savedClinicianNotes.length > 0 ? 1 : 0.4,
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--peach)' }}>📌 {savedClinicianNotes.length} saved</span>
+            {savedClinicianNotes.length > 0 && (
               <span style={{ fontSize: 10, color: 'var(--text-light)' }}>{showSaved ? '▲' : '▼'}</span>
-            </button>
-            {showSaved && (
-              <div style={{ borderTop: '1px solid var(--border)' }}>
-                {[...savedClinicianNotes].reverse().map(note => (
-                  <div key={note.id} style={{
-                    backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e8e0d4 27px, #e8e0d4 28px)',
-                    backgroundSize: '100% 28px', backgroundPositionY: '4px',
-                    display: 'flex', borderBottom: '1px solid var(--border)',
-                  }}>
-                    <div style={{ width: 2, background: '#f4b8b8', flexShrink: 0, marginLeft: 8, marginRight: 6 }} />
-                    <div style={{ flex: 1, padding: '7px 8px 7px 0' }}>
-                      <p style={{ margin: '0 0 3px', fontSize: 11, color: 'var(--text-mid)', lineHeight: '28px' }}>{note.body}</p>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 9, color: 'var(--text-light)' }}>
-                          {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                        <button
-                          onClick={() => unsaveClinicianNote?.(note.id)}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'var(--text-light)', fontSize: 13, lineHeight: 1, padding: 0,
-                            fontFamily: 'inherit',
-                          }}
-                        >×</button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
             )}
-          </div>
-        )}
+          </button>
+          {showSaved && savedClinicianNotes.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)' }}>
+              {[...savedClinicianNotes].reverse().map(note => (
+                <div key={note.id} style={{
+                  backgroundImage: 'repeating-linear-gradient(transparent, transparent 27px, #e8e0d4 27px, #e8e0d4 28px)',
+                  backgroundSize: '100% 28px', backgroundPositionY: '4px',
+                  display: 'flex', borderBottom: '1px solid var(--border)',
+                  position: 'relative',
+                }}>
+                  <div style={{ width: 2, background: '#f4b8b8', flexShrink: 0, marginLeft: 8, marginRight: 6 }} />
+                  <div style={{ flex: 1, padding: '7px 28px 7px 0' }}>
+                    <p style={{ margin: '0 0 3px', fontSize: 11, color: 'var(--text-mid)', lineHeight: '28px' }}>{note.body}</p>
+                    <span style={{ fontSize: 9, color: 'var(--text-light)' }}>
+                      {new Date(note.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => { unsaveClinicianNote?.(note.id); if (savedClinicianNotes.length === 1) setShowSaved(false) }}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--pink)' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-light)' }}
+                    style={{
+                      position: 'absolute', top: 6, right: 8,
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      color: 'var(--text-light)', fontSize: 14, lineHeight: 1, padding: 0,
+                      fontFamily: 'inherit', transition: 'color 0.15s',
+                    }}
+                  >×</button>
+                </div>
+              ))}
+              {/* Clear all */}
+              <div style={{ padding: '7px 12px', display: 'flex', justifyContent: 'flex-end' }}>
+                {confirmClear ? (
+                  <span style={{ fontSize: 10, color: 'var(--text-mid)', fontFamily: "'Outfit', sans-serif" }}>
+                    Sure?{' '}
+                    <button
+                      onClick={() => { clearAllSavedNotes?.(); setShowSaved(false); setConfirmClear(false) }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--pink)', fontSize: 10, fontWeight: 600, padding: 0, fontFamily: 'inherit' }}
+                    >Yes</button>
+                    {' / '}
+                    <button
+                      onClick={() => setConfirmClear(false)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-light)', fontSize: 10, padding: 0, fontFamily: 'inherit' }}
+                    >Cancel</button>
+                  </span>
+                ) : (
+                  <button
+                    onClick={() => setConfirmClear(true)}
+                    onMouseEnter={e => { e.currentTarget.style.color = 'var(--pink)' }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--text-light)' }}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: 10, color: 'var(--text-light)', padding: 0,
+                      fontFamily: "'Outfit', sans-serif", transition: 'color 0.15s',
+                    }}
+                  >Clear all saved</button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* All Notes section */}
         {olderNotes.length > 0 && (
@@ -715,7 +748,7 @@ function ClinicianNotesSidebar({ clinicianNotes, clinicianNotesRead, markClinici
 // ─── Main view ────────────────────────────────────────────────────────────────
 
 export default function DailyView() {
-  const { mealSlots, foodItems, mealLogs, clinicianNotes = [], parentNotes = [], clinicianNotesRead = {}, mealStatuses = {}, savedClinicianNotes = [], insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, setMealStatus } = useOutletContext()
+  const { mealSlots, foodItems, mealLogs, clinicianNotes = [], parentNotes = [], clinicianNotesRead = {}, mealStatuses = {}, savedClinicianNotes = [], insertMealLog, saveParentNote, markClinicianNoteRead, saveClinicianNote, unsaveClinicianNote, clearAllSavedNotes, setMealStatus } = useOutletContext()
   const [selectedDay, setSelectedDay] = useState(getTodayKey)
   const [weekOffset, setWeekOffset] = useState(0)
   const [activeDrag, setActiveDrag] = useState(null)
@@ -978,6 +1011,7 @@ export default function DailyView() {
             savedClinicianNotes={savedClinicianNotes}
             saveClinicianNote={saveClinicianNote}
             unsaveClinicianNote={unsaveClinicianNote}
+            clearAllSavedNotes={clearAllSavedNotes}
           />
 
           <div>
