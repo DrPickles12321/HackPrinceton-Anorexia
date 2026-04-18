@@ -23,7 +23,29 @@ export default function ClinicianView() {
     allMealItems: parentMealItems,
     clinicianNotesRead,
     markParentNoteReadById,
+    patients,
+    viewingPatientUid,
+    setViewingPatientUid,
+    addPatientByCode,
   } = useFirebaseData()
+
+  const [addCodeInput, setAddCodeInput]   = useState('')
+  const [addCodeError, setAddCodeError]   = useState('')
+  const [addCodeLoading, setAddCodeLoading] = useState(false)
+
+  async function handleAddPatient(e) {
+    e.preventDefault()
+    setAddCodeError('')
+    setAddCodeLoading(true)
+    const result = await addPatientByCode(addCodeInput)
+    setAddCodeLoading(false)
+    if (result.error) {
+      setAddCodeError(result.error)
+    } else {
+      setAddCodeInput('')
+    }
+  }
+
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [selectedDay, setSelectedDay] = useState(null)
@@ -170,6 +192,78 @@ export default function ClinicianView() {
 
   return (
     <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+
+      {/* ── Patient selector ─────────────────────────────────────────────── */}
+      <div style={{
+        background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb',
+        padding: '16px 20px', display: 'flex', alignItems: 'flex-start',
+        gap: 20, flexWrap: 'wrap',
+      }}>
+        {/* Dropdown */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 220 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Viewing patient
+          </label>
+          <select
+            value={viewingPatientUid || ''}
+            onChange={e => setViewingPatientUid(e.target.value || null)}
+            style={{
+              padding: '7px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb',
+              fontSize: 13, color: '#111827', background: 'white',
+              fontFamily: "'Outfit', sans-serif", cursor: 'pointer', outline: 'none',
+            }}
+          >
+            <option value="">— Select a patient —</option>
+            {patients.map(p => (
+              <option key={p.uid} value={p.uid}>{p.email}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Divider */}
+        <div style={{ width: 1, background: '#e5e7eb', alignSelf: 'stretch', margin: '0 4px' }} />
+
+        {/* Add Patient */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label style={{ fontSize: 11, fontWeight: 600, color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            Add patient by family code
+          </label>
+          <form onSubmit={handleAddPatient} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <input
+              value={addCodeInput}
+              onChange={e => { setAddCodeInput(e.target.value.toUpperCase()); setAddCodeError('') }}
+              placeholder="ABC123"
+              maxLength={6}
+              style={{
+                padding: '7px 12px', borderRadius: 10, border: '1.5px solid #e5e7eb',
+                fontSize: 13, color: '#111827', fontFamily: "'Outfit', sans-serif",
+                outline: 'none', width: 110, letterSpacing: '1px', fontWeight: 600,
+              }}
+              onFocus={e => e.target.style.borderColor = '#E8735A'}
+              onBlur={e => e.target.style.borderColor = '#e5e7eb'}
+            />
+            <button
+              type="submit"
+              disabled={addCodeLoading || addCodeInput.length < 6}
+              style={{
+                padding: '7px 16px', borderRadius: 10, border: 'none',
+                background: addCodeLoading || addCodeInput.length < 6
+                  ? 'rgba(232,115,90,0.4)'
+                  : 'linear-gradient(135deg, #E8735A 0%, #C85A8A 100%)',
+                color: 'white', fontSize: 13, fontWeight: 600,
+                fontFamily: "'Outfit', sans-serif",
+                cursor: addCodeLoading || addCodeInput.length < 6 ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {addCodeLoading ? '…' : 'Add'}
+            </button>
+          </form>
+          {addCodeError && (
+            <span style={{ fontSize: 12, color: '#E8735A', marginTop: 2 }}>{addCodeError}</span>
+          )}
+        </div>
+      </div>
+
       <header>
         <h1 className="text-2xl font-bold text-gray-900">Clinician Dashboard</h1>
         <p className="text-sm text-gray-600">Weekly meal plan and logs for this family</p>

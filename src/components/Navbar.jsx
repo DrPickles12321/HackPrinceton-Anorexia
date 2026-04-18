@@ -2,6 +2,7 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../firebase'
 import { useRealtimeStatus } from '../contexts/RealtimeContext'
+import { useFirebaseData } from '../contexts/FirebaseDataContext'
 import LiveIndicator from './LiveIndicator'
 
 const PARENT_TABS = [
@@ -12,6 +13,7 @@ const PARENT_TABS = [
 
 export default function Navbar() {
   const { status } = useRealtimeStatus()
+  const { familyCode } = useFirebaseData()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isParent    = pathname.startsWith('/parent')
@@ -87,6 +89,15 @@ export default function Navbar() {
 
           {/* Right side */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
+            {isParent && familyCode && (
+              <div style={{
+                fontSize: 11, color: 'var(--text-light)',
+                background: 'var(--surface-warm)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '4px 10px', letterSpacing: '0.5px',
+              }}>
+                Code: <span style={{ fontWeight: 700, color: 'var(--text-mid)', letterSpacing: '1px' }}>{familyCode}</span>
+              </div>
+            )}
             <LiveIndicator status={status} />
 
             {/* Role toggle */}

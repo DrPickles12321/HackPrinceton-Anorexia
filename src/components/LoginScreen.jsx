@@ -23,19 +23,31 @@ export default function LoginScreen() {
       let cred
       if (mode === 'signin') {
         cred = await signInWithEmailAndPassword(auth, email, password)
+        await set(ref(db, `users/${cred.user.uid}/role`), role)
       } else {
         cred = await createUserWithEmailAndPassword(auth, email, password)
-        await set(ref(db, `users/${cred.user.uid}/role`), role)
-      }
-      // For sign-in, update role in DB so it stays current
-      if (mode === 'signin') {
-        await set(ref(db, `users/${cred.user.uid}/role`), role)
+        const { uid } = cred.user
+        const writes = {
+          [`users/${uid}/role`]:  role,
+          [`users/${uid}/email`]: email,
+        }
+        if (role === 'parent') {
+          const code = generateFamilyCode()
+          writes[`users/${uid}/familyCode`]  = code
+          writes[`familyCodes/${code}`]      = uid
+        }
+        await Promise.all(Object.entries(writes).map(([path, val]) => set(ref(db, path), val)))
       }
     } catch (err) {
       setError(friendlyError(err.code))
     } finally {
       setLoading(false)
     }
+  }
+
+  function generateFamilyCode() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
   }
 
   return (
