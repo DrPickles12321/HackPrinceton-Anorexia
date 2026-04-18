@@ -1,78 +1,155 @@
 import { useMemo } from 'react'
 import { lookupNutrition } from '../lib/nutritionService'
+import { useNutritionalTargets } from '../contexts/NutritionalTargetsContext'
 
-const GOALS = [
-  { zone: 'protein',  label: 'Protein',    icon: '🥩', target: 14, color: 'bg-red-400',    track: 'bg-red-100',  desc: 'e.g. eggs, chicken, fish, beans' },
-  { zone: 'grain',    label: 'Grains',     icon: '🌾', target: 14, color: 'bg-amber-400',  track: 'bg-amber-100', desc: 'e.g. bread, rice, pasta, oats' },
-  { zone: 'produce',  label: 'Vegetables', icon: '🥦', target: 7,  color: 'bg-green-500',  track: 'bg-green-100', desc: 'e.g. salad, broccoli, carrots' },
-  { zone: 'dairy',    label: 'Dairy',      icon: '🥛', target: 7,  color: 'bg-blue-400',   track: 'bg-blue-100',  desc: 'e.g. milk, yogurt, cheese' },
-  { zone: 'fat',      label: 'Healthy Fats', icon: '🫒', target: 7, color: 'bg-yellow-400', track: 'bg-yellow-100', desc: 'e.g. olive oil, avocado, nuts' },
+const PRODUCE_G_PER_SERVING = 80
+
+const NUTRIENTS = [
+  {
+    key: 'protein',
+    label: 'Protein',
+    icon: '🥩',
+    color: 'var(--coral)',
+    bg: 'var(--coral-light)',
+    border: 'var(--coral-mid)',
+    barEnd: '#DBA898',
+    getActual: info => info.protein_g || 0,
+  },
+  {
+    key: 'carbs',
+    label: 'Carbs',
+    icon: '🌾',
+    color: 'var(--peach)',
+    bg: 'var(--peach-light)',
+    border: 'var(--peach-mid)',
+    barEnd: '#E0C07C',
+    getActual: info => info.carbs_g || 0,
+  },
+  {
+    key: 'fruitsVeggies',
+    label: 'Fruits & Veggies',
+    icon: '🥦',
+    color: 'var(--mint)',
+    bg: 'var(--mint-light)',
+    border: 'var(--mint-mid)',
+    barEnd: '#8EC0B0',
+    getActual: info => info.plate_zone === 'produce' ? PRODUCE_G_PER_SERVING : 0,
+  },
 ]
 
 export default function WeeklyGoals({ mealSlots, foodItems, mode = 'parent' }) {
-  const zoneCounts = useMemo(() => {
-    const counts = { protein: 0, grain: 0, produce: 0, dairy: 0, fat: 0 }
+  const { targets } = useNutritionalTargets()
+
+  const weeklyTargets = useMemo(() => ({
+    protein:       (targets.protein       || 0) * 7,
+    carbs:         (targets.carbs         || 0) * 7,
+    fruitsVeggies: (targets.fruitsVeggies || 0) * 7,
+  }), [targets])
+
+  const actuals = useMemo(() => {
+    const sums = { protein: 0, carbs: 0, fruitsVeggies: 0 }
     for (const slot of mealSlots) {
       if (!slot.assigned_food_id) continue
       const food = foodItems.find(f => f.id === slot.assigned_food_id)
       if (!food) continue
       const info = lookupNutrition(food.name, food.category)
-      const zone = info.plate_zone
-      if (zone in counts) counts[zone]++
+      for (const n of NUTRIENTS) sums[n.key] += n.getActual(info)
     }
-    return counts
+    return {
+      protein:       Math.round(sums.protein),
+      carbs:         Math.round(sums.carbs),
+      fruitsVeggies: Math.round(sums.fruitsVeggies),
+    }
   }, [mealSlots, foodItems])
 
-  const totalPlanned = Object.values(zoneCounts).reduce((a, b) => a + b, 0)
+  const totalFilled = mealSlots.filter(s => s.assigned_food_id).length
 
   return (
-    <section className="bg-white border border-gray-200 rounded-xl p-5">
-      <header className="mb-4">
-        <h2 className="text-base font-semibold text-gray-900">Weekly Food Goals</h2>
-        <p className="text-xs text-gray-500 mt-0.5">
+    <section style={{
+      background: 'white',
+      borderRadius: 20,
+      border: '1.5px solid var(--border)',
+      boxShadow: '0 2px 12px rgba(39,23,6,0.06)',
+      padding: '20px 24px',
+    }}>
+      <header style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-dark)', marginBottom: 3 }}>
+          Weekly Nutritional Goals
+        </h2>
+        <p style={{ fontSize: 12, color: 'var(--text-light)' }}>
           {mode === 'clinician'
-            ? 'Planned meals by food group this week vs. recovery targets'
-            : 'How the week\'s meals cover each food group'}
+            ? 'Planned meals vs. weekly targets (daily goal × 7)'
+            : "This week's planned meals vs. nutritional targets"}
         </p>
       </header>
 
-      {totalPlanned === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">No meals planned yet — drag foods onto the grid to start.</p>
+      {totalFilled === 0 ? (
+        <p style={{ fontSize: 13, color: 'var(--text-light)', textAlign: 'center', padding: '24px 0' }}>
+          No meals planned yet — drag foods onto the grid to start.
+        </p>
       ) : (
-        <div className="space-y-4">
-          {GOALS.map(({ zone, label, icon, target, color, track, desc }) => {
-            const count = zoneCounts[zone] || 0
-            const pct = Math.min(100, Math.round((count / target) * 100))
-            const met = count >= target
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {NUTRIENTS.map(n => {
+            const actual = actuals[n.key]
+            const target = weeklyTargets[n.key]
+            const pct = target > 0 ? Math.min(100, Math.round((actual / target) * 100)) : 0
+            const met = actual >= target
+
             return (
-              <div key={zone}>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-800 flex items-center gap-1.5">
-                    {icon} {label}
+              <div key={n.key} style={{
+                background: n.bg,
+                borderRadius: 14,
+                border: `1px solid ${n.border}`,
+                padding: '14px 16px',
+              }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center',
+                  justifyContent: 'space-between', marginBottom: 10,
+                }}>
+                  <span style={{
+                    display: 'flex', alignItems: 'center', gap: 7,
+                    fontWeight: 600, fontSize: 13, color: n.color,
+                  }}>
+                    <span style={{ fontSize: 17 }}>{n.icon}</span>
+                    {n.label}
                   </span>
-                  <span className={`text-xs font-semibold ${met ? 'text-green-600' : 'text-gray-500'}`}>
-                    {count} / {target}
-                    {met && <span className="ml-1">✓</span>}
+                  <span style={{ fontSize: 13, fontWeight: 700, color: met ? 'var(--mint)' : n.color }}>
+                    {actual}g
+                    <span style={{ fontWeight: 400, color: 'var(--text-light)', fontSize: 12 }}> / {target}g</span>
+                    {met && <span style={{ marginLeft: 5, fontSize: 12 }}>✓</span>}
                   </span>
                 </div>
-                <div className={`h-2.5 rounded-full overflow-hidden ${track}`}>
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${color}`}
-                    style={{ width: `${pct}%` }}
-                  />
+
+                <div style={{
+                  height: 8, borderRadius: 999,
+                  background: 'rgba(255,255,255,0.7)',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%', borderRadius: 999,
+                    width: `${pct}%`,
+                    background: met
+                      ? 'var(--mint)'
+                      : `linear-gradient(90deg, ${n.color} 0%, ${n.barEnd} 100%)`,
+                    transition: 'width 0.5s ease',
+                  }} />
                 </div>
-                {mode === 'clinician' && (
-                  <p className="text-[10px] text-gray-400 mt-0.5">{desc}</p>
-                )}
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 5 }}>
+                  <span style={{ fontSize: 10, color: 'var(--text-light)' }}>{pct}% of weekly target</span>
+                  <span style={{ fontSize: 10, color: 'var(--text-light)' }}>
+                    {Math.max(0, target - actual)}g remaining
+                  </span>
+                </div>
               </div>
             )
           })}
         </div>
       )}
 
-      {totalPlanned > 0 && (
-        <p className="text-xs text-gray-400 mt-4 text-center italic">
-          Based on planned meals · {totalPlanned} total slots filled
+      {totalFilled > 0 && (
+        <p style={{ fontSize: 11, color: 'var(--text-light)', textAlign: 'center', marginTop: 14, fontStyle: 'italic' }}>
+          Based on {totalFilled} planned meal{totalFilled !== 1 ? 's' : ''} this week
         </p>
       )}
     </section>

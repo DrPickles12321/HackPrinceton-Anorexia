@@ -9,6 +9,7 @@ import WeeklyInsights from '../components/WeeklyInsights'
 import NotesPanel from '../components/NotesPanel'
 import DailyNutritionSummary from '../components/nutrition/DailyNutritionSummary'
 import WeeklyGoals from '../components/WeeklyGoals'
+import NutritionalTargets from '../components/NutritionalTargets'
 
 export default function ClinicianView() {
   const [mealSlots, setMealSlots] = useState([])
@@ -152,6 +153,7 @@ export default function ClinicianView() {
           />
           <WeeklyInsights mealLogs={mealLogs} foodItems={foodItems} mealSlots={mealSlots} />
           <WeeklyGoals mealSlots={mealSlots} foodItems={foodItems} mode="clinician" />
+          <NutritionalTargets />
           <NotesPanel
             notes={notes}
             mealSlots={mealSlots}

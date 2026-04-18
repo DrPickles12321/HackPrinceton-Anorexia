@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { RealtimeProvider } from './contexts/RealtimeContext'
+import { NutritionalTargetsProvider } from './contexts/NutritionalTargetsContext'
 import Navbar from './components/Navbar'
 import Login from './pages/Login'
 import ParentView from './pages/ParentView'
@@ -30,10 +31,12 @@ function AppLayout() {
 
 export default function App() {
   return (
-    <RealtimeProvider>
-      <BrowserRouter>
-        <AppLayout />
-      </BrowserRouter>
-    </RealtimeProvider>
+    <NutritionalTargetsProvider>
+      <RealtimeProvider>
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      </RealtimeProvider>
+    </NutritionalTargetsProvider>
   )
 }
