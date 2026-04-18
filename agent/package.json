@@ -1,0 +1,13 @@
+{
+  "name": "plate-together-agent",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node --env-file=.env server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.90.0",
+    "@supabase/supabase-js": "^2.103.3",
+    "spectrum-ts": "^0.4.0"
+  }
+}
