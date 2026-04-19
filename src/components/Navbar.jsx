@@ -40,10 +40,9 @@ export default function Navbar() {
               justifyContent: 'center', fontSize: 17, flexShrink: 0,
               boxShadow: '0 2px 8px rgba(184,85,53,0.3)',
             }}>🍽️</div>
-            <span style={{
+            <span className="font-lora" style={{
               fontWeight: 500, fontSize: 19, color: 'var(--text-dark)',
               letterSpacing: '-0.3px', lineHeight: 1,
-              fontFamily: "'Fredoka One', cursive",
             }}>Plate Together</span>
           </div>
 
