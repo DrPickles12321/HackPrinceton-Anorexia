@@ -63,6 +63,43 @@ export async function buildWeekSummary(supabase) {
 }
 
 /**
+ * Calculates streaks and recent challenge food wins.
+ */
+export async function getStreaks(supabase) {
+  const [slotsRes, foodsRes, logsRes] = await Promise.all([
+    supabase.from('meal_slots').select('id').eq('family_id', DEMO_FAMILY_ID),
+    supabase.from('food_items').select('id, name, category').eq('family_id', DEMO_FAMILY_ID),
+    supabase.from('meal_logs').select('meal_slot_id, status, logged_at')
+      .order('logged_at', { ascending: false }).limit(50),
+  ])
+
+  const logs = logsRes.data || []
+  const foods = Object.fromEntries((foodsRes.data || []).map(f => [f.id, f]))
+  const slots = Object.fromEntries((slotsRes.data || []).map(s => [s.id, s]))
+
+  // Longest consecutive okay streak
+  let currentStreak = 0, longestOkayStreak = 0
+  for (const log of [...logs].reverse()) {
+    if (log.status === 'okay') { currentStreak++; longestOkayStreak = Math.max(longestOkayStreak, currentStreak) }
+    else currentStreak = 0
+  }
+
+  // Most recent challenge food marked okay
+  let recentChallengeOkay = null
+  for (const log of logs) {
+    if (log.status === 'okay') {
+      const slot = slots[log.meal_slot_id]
+      if (slot?.assigned_food_id) {
+        const food = foods[slot.assigned_food_id]
+        if (food?.category === 'challenge') { recentChallengeOkay = food.name; break }
+      }
+    }
+  }
+
+  return { longestOkayStreak, recentChallengeOkay }
+}
+
+/**
  * Gets today's dinner slot and its latest log (if any).
  * Uses day-of-week since meal_slots use mon/tue/etc, not dates.
  */
