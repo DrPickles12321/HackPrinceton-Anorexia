@@ -205,7 +205,6 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
       background: 'white', borderRadius: 18,
       border: '1.5px solid var(--border)',
       boxShadow: '0 2px 12px rgba(39,23,6,0.06)',
-      overflow: 'hidden',
     }}>
       {/* Header */}
       <div style={{
@@ -253,8 +252,8 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
       </div>
 
       {/* Body */}
-      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'flex-start', gap: 12, position: 'relative' }}>
-        <div style={{ flex: 1, position: 'relative' }}>
+      <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <DropZone
             mealType={meal.key}
             items={items}
@@ -262,92 +261,90 @@ function MealCard({ meal, slot, items, onRemove, latestLog, onQuickLog, time, on
             onFoodClick={onFoodClick}
             selectedFoodIndex={selectedFoodIndex}
           />
-          {selectedFoodIndex != null && (
-            <div
-              onClick={e => e.stopPropagation()}
-              style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                zIndex: 50,
-                marginTop: 4,
-                background: 'white',
-                border: '1.5px solid var(--border)',
-                borderRadius: 12,
-                padding: '8px 10px',
-                display: 'flex',
-                gap: 6,
-                boxShadow: '0 4px 16px rgba(39,23,6,0.10)',
-              }}
-            >
-              <span style={{ fontSize: 11, color: 'var(--text-light)', alignSelf: 'center', marginRight: 4 }}>
-                {items[selectedFoodIndex]?.name}:
-              </span>
-              {[
-                { key: 'okay',      emoji: '😌', label: 'Ok',   color: '#2d9e5f' },
-                { key: 'difficult', emoji: '😰', label: 'Hard', color: '#c9860a' },
-                { key: 'refused',   emoji: '🙅', label: 'No',   color: '#d63f3f' },
-              ].map(opt => {
-                const isSelected = items[selectedFoodIndex]?.status === opt.key
-                return (
-                  <button
-                    key={opt.key}
-                    onClick={() => onFoodStatusSet?.(meal.key, selectedFoodIndex, isSelected ? null : opt.key)}
-                    style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
-                      padding: '5px 9px', borderRadius: 8, border: 'none',
-                      background: isSelected ? (
-                        opt.key === 'okay' ? '#eaf7f0' : opt.key === 'difficult' ? '#fef8e7' : '#fdeaea'
-                      ) : 'var(--surface-warm)',
-                      cursor: 'pointer',
-                      outline: isSelected ? `2px solid ${opt.color}` : 'none',
-                      fontFamily: "'Outfit', sans-serif",
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{opt.emoji}</span>
-                    <span style={{ fontSize: 9, fontWeight: 600, color: opt.color }}>{opt.label}</span>
-                  </button>
-                )
-              })}
-              <button
-                onClick={e => { e.stopPropagation(); onFoodClick?.(selectedFoodIndex) }}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--text-light)', fontSize: 16, alignSelf: 'center',
-                  padding: '0 2px', fontFamily: 'inherit',
-                }}
-              >×</button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 6, flexShrink: 0, paddingTop: items.length > 1 ? 4 : 0 }}>
+            {STATUS_OPTIONS.map(opt => {
+              const selected = loggedStatus === opt.key
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => hasItems && onQuickLog(slot, opt.key)}
+                  disabled={!hasItems}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+                    padding: '7px 11px', borderRadius: 10,
+                    border: `1.5px solid ${selected ? opt.color : opt.border}`,
+                    background: selected ? opt.bg : 'white',
+                    cursor: hasItems ? 'pointer' : 'default',
+                    opacity: hasItems ? 1 : 0.38,
+                    transition: 'all 0.15s', minWidth: 50,
+                    fontFamily: "'Outfit', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>{opt.emoji}</span>
+                  <span style={{ fontSize: 10, fontWeight: 500, color: selected ? opt.color : '#999' }}>
+                    {opt.label}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, flexShrink: 0, paddingTop: items.length > 1 ? 4 : 0 }}>
-          {STATUS_OPTIONS.map(opt => {
-            const selected = loggedStatus === opt.key
-            return (
-              <button
-                key={opt.key}
-                onClick={() => hasItems && onQuickLog(slot, opt.key)}
-                disabled={!hasItems}
-                style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                  padding: '7px 11px', borderRadius: 10,
-                  border: `1.5px solid ${selected ? opt.color : opt.border}`,
-                  background: selected ? opt.bg : 'white',
-                  cursor: hasItems ? 'pointer' : 'default',
-                  opacity: hasItems ? 1 : 0.38,
-                  transition: 'all 0.15s', minWidth: 50,
-                  fontFamily: "'Outfit', sans-serif",
-                }}
-              >
-                <span style={{ fontSize: 18 }}>{opt.emoji}</span>
-                <span style={{ fontSize: 10, fontWeight: 500, color: selected ? opt.color : '#999' }}>
-                  {opt.label}
-                </span>
-              </button>
-            )
-          })}
-        </div>
+        {selectedFoodIndex != null && (
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              width: '100%',
+              marginTop: 6,
+              background: 'var(--surface-warm)',
+              border: '1px solid var(--border-mid)',
+              borderRadius: 10,
+              padding: '7px 10px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              flexWrap: 'wrap',
+            }}
+          >
+            <span style={{ fontSize: 11, color: 'var(--text-light)', alignSelf: 'center', marginRight: 4 }}>
+              {items[selectedFoodIndex]?.name}:
+            </span>
+            {[
+              { key: 'okay',      emoji: '😌', label: 'Ok',   color: '#2d9e5f' },
+              { key: 'difficult', emoji: '😰', label: 'Hard', color: '#c9860a' },
+              { key: 'refused',   emoji: '🙅', label: 'No',   color: '#d63f3f' },
+            ].map(opt => {
+              const isSelected = items[selectedFoodIndex]?.status === opt.key
+              return (
+                <button
+                  key={opt.key}
+                  onClick={() => onFoodStatusSet?.(meal.key, selectedFoodIndex, isSelected ? null : opt.key)}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1,
+                    padding: '5px 9px', borderRadius: 8, border: 'none',
+                    background: isSelected ? (
+                      opt.key === 'okay' ? '#eaf7f0' : opt.key === 'difficult' ? '#fef8e7' : '#fdeaea'
+                    ) : 'white',
+                    cursor: 'pointer',
+                    outline: isSelected ? `2px solid ${opt.color}` : 'none',
+                    fontFamily: "'Outfit', sans-serif",
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>{opt.emoji}</span>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: opt.color }}>{opt.label}</span>
+                </button>
+              )
+            })}
+            <button
+              onClick={e => { e.stopPropagation(); onFoodClick?.(selectedFoodIndex) }}
+              style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                color: 'var(--text-light)', fontSize: 16, alignSelf: 'center',
+                padding: '0 2px', fontFamily: 'inherit',
+              }}
+            >×</button>
+          </div>
+        )}
       </div>
     </div>
   )
